@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXTMOVE — Quel est votre archétype professionnel ?</title>
+<meta name="description" content="Découvrez votre archétype professionnel en 22 questions. Gratuit, sans inscription.">
+<style>
+:root {
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --card: #ffffff;
+  --border: #e2e5ec;
+  --text: #16181d;
+  --muted: #6b7280;
+  --accent: #3458e8;
+  --accent-hover: #2543c0;
+  --accent-glow: rgba(52,88,232,0.12);
+  --builder: #9333ea;
+  --expert: #3b5bdb;
+  --operator: #dc3545;
+  --leader: #16a34a;
+  --explorer: #2563eb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* --- NAV --- */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { font-size: 1.2rem; font-weight: 800; letter-spacing: 0.04em; text-decoration: none; color: var(--text); }
+.nav-brand span { color: var(--accent); }
+
+/* --- CONTAINER --- */
+.container { max-width: 640px; margin: 0 auto; padding: 90px 24px 60px; }
+
+/* --- INTRO --- */
+.intro { text-align: center; margin-bottom: 40px; }
+.intro h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 12px; }
+.intro h1 em { font-style: normal; color: var(--accent); }
+.intro p { color: var(--muted); font-size: 1.05rem; max-width: 480px; margin: 0 auto; }
+
+/* --- PROGRESS --- */
+.progress-bar { width: 100%; height: 6px; background: var(--surface); border-radius: 3px; margin-bottom: 32px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+.progress-text { text-align: center; font-size: 0.82rem; color: var(--muted); margin-bottom: 8px; }
+
+/* --- QUESTION --- */
+.question-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; margin-bottom: 24px; }
+.question-card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; line-height: 1.4; }
+.option {
+  display: block; width: 100%; text-align: left; padding: 14px 18px;
+  background: var(--surface); border: 2px solid var(--border); border-radius: 10px;
+  font-size: 0.95rem; color: var(--text); cursor: pointer; margin-bottom: 10px;
+  transition: border-color 0.15s, background 0.15s; font-family: inherit;
+}
+.option:hover { border-color: var(--accent); background: var(--accent-glow); }
+.option.selected { border-color: var(--accent); background: var(--accent-glow); font-weight: 600; }
+
+/* --- NAV BUTTONS --- */
+.q-nav { display: flex; justify-content: space-between; margin-top: 16px; }
+.btn-prev, .btn-next {
+  padding: 10px 24px; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; border: none; font-family: inherit;
+}
+.btn-prev { background: var(--surface); color: var(--muted); }
+.btn-prev:hover { background: var(--border); }
+.btn-next { background: var(--accent); color: white; }
+.btn-next:hover { background: var(--accent-hover); }
+.btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* --- RESULTS --- */
+#results { display: none; }
+.results-header { text-align: center; margin-bottom: 36px; }
+.results-header h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+.results-header p { color: var(--muted); font-size: 1rem; }
+
+.archetype-result {
+  display: flex; align-items: flex-end; justify-content: center; gap: 24px;
+  margin-bottom: 32px;
+}
+.arch-result-primary { text-align: center; }
+.arch-result-primary img { width: 180px; height: auto; border-radius: 16px; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.12)); }
+.arch-result-primary .arch-name { font-size: 1.4rem; font-weight: 800; margin-top: 12px; }
+.arch-result-primary .arch-pct { font-size: 0.9rem; color: var(--muted); }
+.arch-result-secondary { text-align: center; }
+.arch-result-secondary img { width: 90px; height: auto; border-radius: 12px; opacity: 0.8; filter: drop-shadow(0 3px 10px rgba(0,0,0,0.08)); }
+.arch-result-secondary .arch-name { font-size: 0.95rem; font-weight: 700; margin-top: 8px; }
+.arch-result-secondary .arch-pct { font-size: 0.8rem; color: var(--muted); }
+
+.arch-color-builder { color: var(--builder); }
+.arch-color-expert { color: var(--expert); }
+.arch-color-operator { color: var(--operator); }
+.arch-color-leader { color: var(--leader); }
+.arch-color-explorer { color: var(--explorer); }
+
+/* --- PROFILE BARS --- */
+.profile-section {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 24px; margin-bottom: 28px;
+}
+.profile-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-icon { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; }
+.bar-label { width: 120px; font-size: 0.85rem; color: var(--muted); flex-shrink: 0; }
+.bar-track { flex: 1; height: 10px; background: var(--border); border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 6px; background: var(--accent); transition: width 0.5s; }
+.bar-value { width: 28px; font-size: 0.82rem; color: var(--muted); text-align: right; }
+
+/* --- SHARE SECTION --- */
+.share-section {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 28px; margin-bottom: 28px; text-align: center;
+}
+.share-section h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+.share-section p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+.share-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; justify-content: center; }
+.share-tab {
+  padding: 8px 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  background: var(--card); color: var(--muted); border: none; font-family: inherit;
+}
+.share-tab.active { background: var(--accent); color: white; }
+.share-panel { display: none; }
+.share-panel.active { display: block; }
+.badge-preview { margin: 0 auto 16px; }
+.badge-preview canvas { border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); max-width: 100%; height: auto; }
+.btn-download {
+  display: inline-block; padding: 12px 28px; border-radius: 8px;
+  background: var(--accent); color: white; font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; border: none; font-family: inherit; margin: 4px;
+}
+.btn-download:hover { background: var(--accent-hover); }
+.photo-upload-zone {
+  border: 2px dashed var(--border); border-radius: 12px; padding: 32px;
+  cursor: pointer; margin-bottom: 16px; transition: border-color 0.2s;
+}
+.photo-upload-zone:hover { border-color: var(--accent); }
+.photo-upload-zone p { color: var(--muted); font-size: 0.9rem; }
+.ring-options { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
+.ring-opt {
+  padding: 6px 16px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; border: 2px solid var(--border); background: var(--card); color: var(--muted);
+  font-family: inherit;
+}
+.ring-opt.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.crop-controls { display: flex; align-items: center; gap: 10px; justify-content: center; margin: 12px 0 4px; }
+.zoom-label { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+.zoom-slider { width: 180px; accent-color: var(--accent); }
+.crop-hint { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+/* --- CTA --- */
+.cta-box {
+  text-align: center; padding: 32px; background: var(--accent-glow);
+  border: 1px solid rgba(52,88,232,0.2); border-radius: 14px; margin-bottom: 24px;
+}
+.cta-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+.cta-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 16px; }
+.cta-btn {
+  display: inline-block; padding: 14px 36px; border-radius: 10px;
+  background: var(--accent); color: white; font-size: 1rem; font-weight: 700;
+  text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+
+/* --- FOOTER --- */
+.footer { border-top: 1px solid var(--border); padding: 28px; text-align: center; color: var(--muted); font-size: 0.82rem; }
+
+@media (max-width: 500px) {
+  .container { padding: 80px 16px 40px; }
+  .archetype-result { gap: 16px; }
+  .arch-result-primary img { width: 140px; }
+  .arch-result-secondary img { width: 70px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-brand">NEXT<span>MOVE</span></a>
+</nav>
+
+<!-- ======================== QUIZ ======================== -->
+<div class="container" id="quizSection">
+  <div class="intro">
+    <h1>Quel est votre <em>archétype</em> professionnel ?</h1>
+    <p>22 questions. 3 minutes. Découvrez comment vous fonctionnez — et partagez-le.</p>
+  </div>
+  <div class="progress-text" id="progressText">1 / 22</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div id="questionContainer"></div>
+  <div class="q-nav">
+    <button class="btn-prev" id="btnPrev" onclick="prevQuestion()">Retour</button>
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()" disabled>Suivant</button>
+  </div>
+</div>
+
+<!-- ======================== RESULTS ======================== -->
+<div class="container" id="results">
+  <div class="results-header">
+    <h1>Votre archétype professionnel</h1>
+    <p>Voici votre signature — comment vous fonctionnez naturellement.</p>
+  </div>
+
+  <div class="archetype-result" id="archResult"></div>
+
+  <div class="profile-section" id="profileBars"></div>
+
+  <!-- SHARE -->
+  <div class="share-section">
+    <h3>Partagez votre archétype</h3>
+    <p>Téléchargez votre badge ou ajoutez un anneau à votre photo LinkedIn.</p>
+    <div class="share-tabs">
+      <button class="share-tab active" onclick="switchTab('badge')">Badge</button>
+      <button class="share-tab" onclick="switchTab('ring')">Photo + Anneau</button>
+    </div>
+
+    <!-- Badge panel -->
+    <div class="share-panel active" id="panelBadge">
+      <div class="badge-preview"><canvas id="badgeCanvas" width="1080" height="1080"></canvas></div>
+      <button class="btn-download" onclick="downloadCanvas('badgeCanvas','nextmove-archetype.png')">Télécharger le badge</button>
+    </div>
+
+    <!-- Ring panel -->
+    <div class="share-panel" id="panelRing">
+      <div class="ring-options">
+        <button class="ring-opt active" data-mode="both" onclick="setRingMode('both')">ARCHETYPE + NEXTMOVE</button>
+        <button class="ring-opt" data-mode="archonly" onclick="setRingMode('archonly')">ARCHETYPE seul</button>
+      </div>
+      <div class="photo-upload-zone" id="uploadZone" onclick="document.getElementById('photoInput').click()">
+        <p>Cliquez ou glissez votre photo ici</p>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+      </div>
+      <div class="badge-preview" id="ringPreview" style="display:none">
+        <canvas id="ringCanvas" width="1080" height="1080" style="cursor:grab"></canvas>
+        <div class="crop-controls" id="cropControls">
+          <label class="zoom-label">Zoom</label>
+          <input type="range" id="zoomSlider" min="100" max="300" value="100" class="zoom-slider">
+          <span class="zoom-label" id="zoomValue">100%</span>
+        </div>
+        <p class="crop-hint">Glissez la photo pour ajuster le cadrage</p>
+      </div>
+      <button class="btn-download" id="btnRingDl" style="display:none" onclick="downloadCanvas('ringCanvas','nextmove-linkedin.png')">Télécharger la photo</button>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h3>Votre prochaine opportunité est-elle faite pour vous ?</h3>
+    <p>Utilisez NEXTMOVE pour comparer votre poste actuel et une opportunité — avec la puissance de votre profil archétypal.</p>
+    <a id="ctaAnalyze" href="/app" class="cta-btn">Continuer vers l'analyse</a>
+  </div>
+</div>
+
+<footer class="footer">NEXTMOVE — Decision Visualization Engine &middot; 2026</footer>
+
+<script>
+const ARCH_IMAGES = {Builder:'/landing/images/builder.png',Expert:'/landing/images/expert.png',Operator:'/landing/images/operator.png',Leader:'/landing/images/leader.png',Explorer:'/landing/images/explorer.png'};
+const AXIS_IMAGES = {autonomy:'/landing/images/autonomie.png',uncertainty:'/landing/images/incertitude.png',operational_load:'/landing/images/charge_operationnelle.png',learning:'/landing/images/apprentissage.png',optionality:'/landing/images/optionalite.png',relational:'/landing/images/relationnelle.png'};
+const AXIS_LABELS = {operational_load:'Charge opérationnelle',uncertainty:'Incertitude',autonomy:'Autonomie',learning:'Apprentissage',optionality:'Optionalité',relational:'Relationnel'};
+const ARCH_COLORS = {Builder:'#9333ea',Expert:'#3b5bdb',Operator:'#dc3545',Leader:'#16a34a',Explorer:'#2563eb'};
+const ARCH_TAGLINES = {
+  Builder:"Je construis, je lance, je livre.",
+  Expert:"J'analyse, j'approfondis, je résous.",
+  Operator:"J'exécute, j'optimise, je fiabilise.",
+  Leader:"J'oriente, je fédère, j'arbitre.",
+  Explorer:"Je découvre, je teste, je pivote."
+};
+
+let questions = [];
+let answers = {};
+let currentQ = 0;
+
+// --- LOAD QUESTIONS ---
+async function loadQuestions() {
+  try {
+    const resp = await fetch('/questionnaire');
+    const data = await resp.json();
+    questions = data.questions;
+    renderQuestion();
+  } catch(err) {
+    document.getElementById('questionContainer').innerHTML = '<div class="question-card"><h2>Erreur de chargement. Rechargez la page.</h2></div>';
+  }
+}
+
+function esc(s) { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; }
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const sel = answers[q.id] || null;
+  const container = document.getElementById('questionContainer');
+  const card = document.createElement('div');
+  card.className = 'question-card';
+  const h2 = document.createElement('h2');
+  h2.textContent = q.text;
+  card.appendChild(h2);
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = sel === opt.value ? 'option selected' : 'option';
+    btn.textContent = opt.label;
+    btn.addEventListener('click', () => {
+      answers[q.id] = opt.value;
+      card.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('btnNext').disabled = false;
+    });
+    card.appendChild(btn);
+  });
+  container.innerHTML = '';
+  container.appendChild(card);
+  document.getElementById('progressText').textContent = `${currentQ + 1} / ${questions.length}`;
+  document.getElementById('progressFill').style.width = `${((currentQ + 1) / questions.length) * 100}%`;
+  document.getElementById('btnPrev').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+  document.getElementById('btnNext').disabled = !answers[q.id];
+  document.getElementById('btnNext').textContent = currentQ === questions.length - 1 ? 'Voir mon archétype' : 'Suivant';
+}
+
+function nextQuestion() {
+  if (currentQ < questions.length - 1) { currentQ++; renderQuestion(); }
+  else { submitQuiz(); }
+}
+function prevQuestion() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+// --- SUBMIT ---
+async function submitQuiz() {
+  try {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = 'Calcul en cours...';
+    const resp = await fetch('/questionnaire/score', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(answers)});
+    if (!resp.ok) throw new Error('Erreur serveur: ' + resp.status);
+    const profile = await resp.json();
+    showResults(profile);
+  } catch(err) {
+    alert('Erreur: ' + err.message);
+    document.getElementById('btnNext').disabled = false;
+    document.getElementById('btnNext').textContent = 'Voir mon archétype';
+  }
+}
+
+// --- RESULTS ---
+function showResults(profile) {
+  document.getElementById('quizSection').style.display = 'none';
+  const resultsEl = document.getElementById('results');
+  resultsEl.style.display = 'block';
+  resultsEl.style.visibility = 'visible';
+  resultsEl.style.opacity = '1';
+  window.scrollTo(0, 0);
+
+  // Use archetype_ranking (array, order guaranteed by backend)
+  const ranking = profile.archetype_ranking;
+  const sorted = ranking.map(e => ({name: e.name, val: e.votes * 25}));
+  const primary = sorted[0];
+  const secondary = sorted[1] && sorted[1].val > 0 ? sorted[1] : null;
+
+  // Archetype images
+  let html = '';
+  html += `<div class="arch-result-primary"><img src="${ARCH_IMAGES[primary.name]}" alt="${primary.name}"><div class="arch-name arch-color-${primary.name.toLowerCase()}">${primary.name}</div><div class="arch-pct">${primary.val}%</div></div>`;
+  if (secondary) {
+    html += `<div class="arch-result-secondary"><img src="${ARCH_IMAGES[secondary.name]}" alt="${secondary.name}"><div class="arch-name arch-color-${secondary.name.toLowerCase()}">${secondary.name}</div><div class="arch-pct">${secondary.val}%</div></div>`;
+  }
+  document.getElementById('archResult').innerHTML = html;
+
+  // Profile bars
+  const axes = ['autonomy','uncertainty','operational_load','learning','optionality','relational'];
+  let barsHtml = '<h3>Votre profil décisionnel</h3>';
+  axes.forEach(axis => {
+    const val = profile[axis] || 1;
+    const pct = (val / 5) * 100;
+    barsHtml += `<div class="bar-row"><img class="bar-icon" src="${AXIS_IMAGES[axis]}" alt="${axis}"><div class="bar-label">${AXIS_LABELS[axis]}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="bar-value">${val}/5</div></div>`;
+  });
+  document.getElementById('profileBars').innerHTML = barsHtml;
+
+  // Generate badge
+  generateBadge(primary, secondary);
+
+  // Store for ring
+  window._primaryArch = primary;
+  window._secondaryArch = secondary;
+
+  // Build CTA link with profile data
+  const profileParam = encodeURIComponent(JSON.stringify(profile));
+  document.getElementById('ctaAnalyze').href = '/app?profile=' + profileParam;
+}
+
+// --- BADGE CANVAS ---
+function generateBadge(primary, secondary) {
+  const canvas = document.getElementById('badgeCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1080;
+
+  // Background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Load primary image
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    // Subtle glow circle behind image
+    const cx = W / 2, cy = 380;
+    const grad = ctx.createRadialGradient(cx, cy, 60, cx, cy, 220);
+    grad.addColorStop(0, ARCH_COLORS[primary.name] + '20');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, 220, 0, Math.PI * 2); ctx.fill();
+
+    // Image
+    const imgW = 280, imgH = imgW * (img.height / img.width);
+    ctx.drawImage(img, cx - imgW / 2, cy - imgH / 2, imgW, imgH);
+
+    // Archetype name
+    ctx.fillStyle = ARCH_COLORS[primary.name];
+    ctx.font = 'bold 72px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(primary.name.toUpperCase(), cx, cy + imgH / 2 + 80);
+
+    // Percentage
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '32px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText(`${primary.val}%`, cx, cy + imgH / 2 + 120);
+
+    // Tagline
+    ctx.fillStyle = '#374151';
+    ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText(ARCH_TAGLINES[primary.name], cx, cy + imgH / 2 + 175);
+
+    // Secondary if present
+    if (secondary) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      ctx.fillText(`+ ${secondary.name} (${secondary.val}%)`, cx, cy + imgH / 2 + 215);
+    }
+
+    // Footer
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '22px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('discover your archetype', cx, H - 90);
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('nextmove.ai', cx, H - 55);
+  };
+  img.src = ARCH_IMAGES[primary.name];
+}
+
+// --- RING CANVAS ---
+let ringMode = 'both';
+let uploadedPhoto = null;
+let photoOffset = {x: 0, y: 0};
+let photoZoom = 1;
+
+function setRingMode(mode) {
+  ringMode = mode;
+  document.querySelectorAll('.ring-opt').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  if (uploadedPhoto) drawRing();
+}
+
+function loadPhoto(src) {
+  uploadedPhoto = new Image();
+  uploadedPhoto.onload = () => {
+    photoOffset = {x: 0, y: 0};
+    photoZoom = 1;
+    document.getElementById('zoomSlider').value = 100;
+    document.getElementById('zoomValue').textContent = '100%';
+    document.getElementById('ringPreview').style.display = 'block';
+    document.getElementById('cropControls').style.display = 'flex';
+    document.getElementById('btnRingDl').style.display = 'inline-block';
+    drawRing();
+  };
+  uploadedPhoto.src = src;
+}
+
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => loadPhoto(ev.target.result);
+  reader.readAsDataURL(file);
+}
+
+// Drop zone
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor = 'var(--accent)'; });
+uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = ''; });
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = ev => loadPhoto(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+});
+
+// Zoom slider
+document.getElementById('zoomSlider').addEventListener('input', e => {
+  photoZoom = parseInt(e.target.value) / 100;
+  document.getElementById('zoomValue').textContent = e.target.value + '%';
+  if (uploadedPhoto) drawRing();
+});
+
+// Drag to pan on canvas
+(function setupDrag() {
+  const canvas = document.getElementById('ringCanvas');
+  let dragging = false, lastX = 0, lastY = 0;
+  function getPos(e) {
+    if (e.touches) return {x: e.touches[0].clientX, y: e.touches[0].clientY};
+    return {x: e.clientX, y: e.clientY};
+  }
+  function onStart(e) {
+    e.preventDefault();
+    dragging = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    canvas.style.cursor = 'grabbing';
+  }
+  function onMove(e) {
+    if (!dragging || !uploadedPhoto) return;
+    e.preventDefault();
+    const p = getPos(e);
+    const rect = canvas.getBoundingClientRect();
+    const scaleCanvas = 1080 / rect.width;
+    photoOffset.x += (p.x - lastX) * scaleCanvas;
+    photoOffset.y += (p.y - lastY) * scaleCanvas;
+    lastX = p.x; lastY = p.y;
+    drawRing();
+  }
+  function onEnd() { dragging = false; canvas.style.cursor = 'grab'; }
+  canvas.addEventListener('mousedown', onStart);
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseup', onEnd);
+  canvas.addEventListener('mouseleave', onEnd);
+  canvas.addEventListener('touchstart', onStart, {passive: false});
+  canvas.addEventListener('touchmove', onMove, {passive: false});
+  canvas.addEventListener('touchend', onEnd);
+})();
+
+function drawRing() {
+  const canvas = document.getElementById('ringCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1080;
+  const cx = W / 2, cy = H / 2;
+  const R = 500;
+  const primary = window._primaryArch;
+  const bannerColor = '#2563eb';
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. Draw circular photo with pan + zoom
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.clip();
+  const img = uploadedPhoto;
+  const baseScale = Math.max((R * 2) / img.width, (R * 2) / img.height);
+  const finalScale = baseScale * photoZoom;
+  const dw = img.width * finalScale, dh = img.height * finalScale;
+  ctx.drawImage(img, cx - dw / 2 + photoOffset.x, cy - dh / 2 + photoOffset.y, dw, dh);
+  ctx.restore();
+
+  // 2. Banner arc from 5h to 10h on the clock face
+  const bannerStart = Math.PI / 3;
+  const bannerEnd = Math.PI * 7 / 6;
+  const bannerInner = R * 0.70;
+  const fadeSpan = 0.08;
+
+  // Draw banner in slices for gradient fade at edges
+  const slices = 60;
+  const sliceAngle = (bannerEnd - bannerStart) / slices;
+  for (let i = 0; i < slices; i++) {
+    const a0 = bannerStart + i * sliceAngle;
+    const a1 = a0 + sliceAngle + 0.005;
+    const mid = (a0 + a1) / 2;
+    const distFromStart = mid - bannerStart;
+    const distFromEnd = bannerEnd - mid;
+    const totalSpan = bannerEnd - bannerStart;
+    const fadeZone = totalSpan * fadeSpan;
+    let alpha = 0.82;
+    if (distFromStart < fadeZone) alpha *= distFromStart / fadeZone;
+    if (distFromEnd < fadeZone) alpha *= distFromEnd / fadeZone;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, a0, a1);
+    ctx.arc(cx, cy, bannerInner, a1, a0, true);
+    ctx.closePath();
+    const r = parseInt(bannerColor.slice(1,3),16);
+    const g = parseInt(bannerColor.slice(3,5),16);
+    const b = parseInt(bannerColor.slice(5,7),16);
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 3. Text along the banner arc (bottom half — reverse direction so text reads correctly)
+  const textR = (R + bannerInner) / 2;
+  const textCenter = Math.PI * 0.75;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (ringMode === 'both') {
+    const line = '#' + primary.name.toUpperCase() + '  ·  NEXTMOVE';
+    ctx.font = 'bold 54px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    drawTextOnArcBottom(ctx, line, cx, cy, textR, textCenter);
+  } else {
+    const line = '#' + primary.name.toUpperCase();
+    ctx.font = 'bold 62px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    drawTextOnArcBottom(ctx, line, cx, cy, textR, textCenter);
+  }
+}
+
+function drawTextOnArcBottom(ctx, text, cx, cy, radius, centerAngle) {
+  const GAP = 4;
+  const charWidths = [];
+  for (let i = 0; i < text.length; i++) {
+    charWidths.push(ctx.measureText(text[i]).width);
+  }
+  const charAngles = charWidths.map(w => (w + GAP) / radius);
+  const totalAngle = charAngles.reduce((s, a) => s + a, 0) - (GAP / radius);
+  let angle = centerAngle + totalAngle / 2;
+  for (let i = 0; i < text.length; i++) {
+    angle -= charAngles[i] / 2;
+    const x = cx + radius * Math.cos(angle);
+    const y = cy + radius * Math.sin(angle);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle - Math.PI / 2);
+    ctx.fillText(text[i], 0, 0);
+    ctx.restore();
+    angle -= charAngles[i] / 2;
+  }
+}
+
+// --- DOWNLOAD ---
+function downloadCanvas(canvasId, filename) {
+  const canvas = document.getElementById(canvasId);
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// --- TAB SWITCH ---
+function switchTab(tab) {
+  document.querySelectorAll('.share-tab').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab === 'badge' ? 'badge' : 'photo')));
+  document.getElementById('panelBadge').classList.toggle('active', tab === 'badge');
+  document.getElementById('panelRing').classList.toggle('active', tab === 'ring');
+}
+
+// --- INIT ---
+loadQuestions();
+</script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXTMOVE — Visualisez votre décision de carrière</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --card: #ffffff;
+  --border: #e2e5ec;
+  --text: #16181d;
+  --muted: #6b7280;
+  --accent: #3458e8;
+  --accent-glow: rgba(52,88,232,0.12);
+  --builder: #9333ea;
+  --expert: #3b5bdb;
+  --operator: #dc3545;
+  --leader: #16a34a;
+  --explorer: #2563eb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+
+/* --- NAV --- */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { font-size: 1.2rem; font-weight: 800; letter-spacing: 0.04em; }
+.nav-brand span { color: var(--accent); }
+.nav-cta {
+  padding: 8px 22px; border-radius: 8px; font-size: 0.88rem; font-weight: 600;
+  background: var(--accent); color: white; border: none; cursor: pointer;
+  transition: background 0.2s;
+}
+.nav-cta:hover { background: #2543c0; }
+
+/* --- HERO --- */
+.hero {
+  padding: 140px 32px 80px; text-align: center;
+  max-width: 820px; margin: 0 auto;
+}
+.hero-badge {
+  display: inline-block; padding: 5px 14px; border-radius: 20px;
+  background: var(--accent-glow); color: var(--accent);
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.03em;
+  margin-bottom: 24px;
+}
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
+  line-height: 1.15; margin-bottom: 20px;
+}
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero p {
+  font-size: 1.15rem; color: var(--muted); max-width: 600px;
+  margin: 0 auto 36px;
+}
+.hero-cta {
+  display: inline-block; padding: 14px 36px; border-radius: 10px;
+  background: var(--accent); color: white; font-size: 1rem; font-weight: 700;
+  transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+  border: none; text-decoration: none;
+}
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--accent-glow);
+}
+
+/* --- SECTIONS --- */
+.section {
+  max-width: 1060px; margin: 0 auto; padding: 80px 32px;
+}
+.section-label {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 10px;
+}
+.section h2 {
+  font-size: 1.8rem; font-weight: 800; margin-bottom: 16px; line-height: 1.25;
+}
+.section > p.sub {
+  color: var(--muted); font-size: 1.05rem; max-width: 640px; margin-bottom: 48px;
+}
+
+/* --- PROBLEM --- */
+.problem-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.problem-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 28px 24px;
+}
+.problem-card .icon { font-size: 1.6rem; margin-bottom: 14px; }
+.problem-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.problem-card p { font-size: 0.9rem; color: var(--muted); }
+
+/* --- HOW IT WORKS --- */
+.steps {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  counter-reset: step;
+}
+.step {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 32px 24px; position: relative; counter-increment: step;
+}
+.step::before {
+  content: counter(step);
+  position: absolute; top: -16px; left: 24px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent); color: white;
+  font-size: 0.85rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.step p { font-size: 0.9rem; color: var(--muted); }
+
+/* --- ARCHETYPES --- */
+.archetypes-intro {
+  text-align: center; max-width: 640px; margin: 0 auto 48px;
+}
+.archetype-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;
+}
+.archetype-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px 16px; text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.archetype-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+}
+.archetype-card img {
+  width: 100%; max-width: 140px; height: auto; margin: 0 auto 16px; display: block;
+  border-radius: 12px;
+}
+.archetype-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+.archetype-card p { font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+
+.archetype-card.builder h3 { color: var(--builder); }
+.archetype-card.expert h3 { color: var(--expert); }
+.archetype-card.operator h3 { color: var(--operator); }
+.archetype-card.leader h3 { color: var(--leader); }
+.archetype-card.explorer h3 { color: var(--explorer); }
+
+/* --- AXES --- */
+.axes-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+.axis-item {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 22px 20px; display: flex; gap: 16px; align-items: flex-start;
+}
+.axis-item img { width: 52px; height: 52px; border-radius: 10px; flex-shrink: 0; }
+.axis-item-text h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
+.axis-item-text p { font-size: 0.85rem; color: var(--muted); }
+
+/* --- CTA FINAL --- */
+.cta-section {
+  text-align: center; padding: 80px 32px;
+  max-width: 700px; margin: 0 auto;
+}
+.cta-section h2 {
+  font-size: 1.8rem; font-weight: 800; margin-bottom: 16px;
+}
+.cta-section p {
+  color: var(--muted); font-size: 1.05rem; margin-bottom: 36px;
+}
+
+/* --- FOOTER --- */
+.footer {
+  border-top: 1px solid var(--border); padding: 32px;
+  text-align: center; color: var(--muted); font-size: 0.82rem;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 900px) {
+  .archetype-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 700px) {
+  .problem-grid, .steps, .axes-grid { grid-template-columns: 1fr; }
+  .archetype-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero { padding: 120px 20px 60px; }
+  .section { padding: 60px 20px; }
+}
+@media (max-width: 480px) {
+  .archetype-grid { grid-template-columns: 1fr; max-width: 260px; margin: 0 auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">NEXT<span>MOVE</span></div>
+  <a href="/quiz" style="color:var(--accent);font-size:0.88rem;font-weight:600;margin-right:16px;">Mon archétype</a>
+  <a href="/app" class="nav-cta">Lancer l'analyse</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">Decision Visualization Engine</div>
+  <h1>Ne choisissez plus au feeling.<br>Visualisez votre <em>vraie</em> décision.</h1>
+  <p>NEXTMOVE décompose votre situation actuelle et l'opportunité qui se présente en structures comparables. Pas de score, pas de recommandation — juste la clarté.</p>
+  <a href="/quiz" class="hero-cta">Commencer mon analyse</a>
+</section>
+
+<!-- PROBLEM -->
+<section class="section">
+  <div class="section-label">Le problème</div>
+  <h2>Les décisions de carrière sont prises dans le flou</h2>
+  <p class="sub">Listes de pour/contre, intuitions contradictoires, conseils génériques... Les outils actuels ne vous aident pas à voir la structure de votre choix.</p>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="icon">🎯</div>
+      <h3>Biais de confirmation</h3>
+      <p>Vous cherchez des arguments pour la décision que vous avez déjà prise inconsciemment.</p>
+    </div>
+    <div class="problem-card">
+      <div class="icon">🌫️</div>
+      <h3>Dimensions cachées</h3>
+      <p>L'autonomie, la charge opérationnelle, le potentiel d'apprentissage — des axes invisibles mais décisifs.</p>
+    </div>
+    <div class="problem-card">
+      <div class="icon">⚖️</div>
+      <h3>Fausse symétrie</h3>
+      <p>Comparer deux postes sur le salaire seul, c'est comparer deux icebergs par leur partie visible.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="section-label">Comment ça marche</div>
+  <h2>3 étapes vers la clarté</h2>
+  <p class="sub">Pas de chatbot, pas de formulaire interminable. Décrivez, visualisez, décidez.</p>
+  <div class="steps">
+    <div class="step">
+      <h3>Décrivez</h3>
+      <p>Décrivez votre poste actuel et l'opportunité en texte libre. Ajoutez votre profil et vos priorités.</p>
+    </div>
+    <div class="step">
+      <h3>Visualisez</h3>
+      <p>NEXTMOVE décompose les deux trajectoires sur 6 axes structurels et identifie les tensions clés.</p>
+    </div>
+    <div class="step">
+      <h3>Décidez</h3>
+      <p>Avec une carte de décision complète — axes, archétypes, scénarios, questions décisives — la structure remplace le flou.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHETYPES -->
+<section class="section">
+  <div class="archetypes-intro">
+    <div class="section-label">Les 5 archétypes professionnels</div>
+    <h2>Chaque poste a une signature</h2>
+    <p class="sub">NEXTMOVE identifie la distribution archétypale de chaque trajectoire. Pas un test de personnalité — une radiographie du poste.</p>
+  </div>
+  <div class="archetype-grid">
+    <div class="archetype-card builder">
+      <img src="/landing/images/builder.png" alt="Builder">
+      <h3>Builder</h3>
+      <p>Crée, construit, lance. Environnement incertain, forte autonomie, résultats tangibles.</p>
+    </div>
+    <div class="archetype-card expert">
+      <img src="/landing/images/expert.png" alt="Expert">
+      <h3>Expert</h3>
+      <p>Approfondit, analyse, résout. Maîtrise technique, faible incertitude, haute valeur de savoir.</p>
+    </div>
+    <div class="archetype-card operator">
+      <img src="/landing/images/operator.png" alt="Operator">
+      <h3>Operator</h3>
+      <p>Exécute, optimise, fiabilise. Charge opérationnelle élevée, processus rodés, impact par la constance.</p>
+    </div>
+    <div class="archetype-card leader">
+      <img src="/landing/images/leader.png" alt="Leader">
+      <h3>Leader</h3>
+      <p>Oriente, fédère, arbitre. Vision stratégique, dimension relationnelle forte, prise de décision.</p>
+    </div>
+    <div class="archetype-card explorer">
+      <img src="/landing/images/explorer.png" alt="Explorer">
+      <h3>Explorer</h3>
+      <p>Découvre, teste, pivote. Forte incertitude assumée, apprentissage rapide, optionalité maximale.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 AXES -->
+<section class="section">
+  <div class="section-label">Le modèle d'analyse</div>
+  <h2>6 axes structurels</h2>
+  <p class="sub">Chaque trajectoire est décomposée sur 6 dimensions indépendantes. Pas de score global — chaque axe raconte une partie de l'histoire.</p>
+  <div class="axes-grid">
+    <div class="axis-item">
+      <img src="/landing/images/autonomie.png" alt="Autonomie">
+      <div class="axis-item-text"><h3>Autonomie</h3>
+      <p>Degré de liberté dans les décisions quotidiennes et la définition de votre périmètre.</p></div>
+    </div>
+    <div class="axis-item">
+      <img src="/landing/images/incertitude.png" alt="Incertitude">
+      <div class="axis-item-text"><h3>Incertitude</h3>
+      <p>Niveau d'imprévisibilité de l'environnement — marché, organisation, rôle.</p></div>
+    </div>
+    <div class="axis-item">
+      <img src="/landing/images/charge_operationnelle.png" alt="Charge opérationnelle">
+      <div class="axis-item-text"><h3>Charge opérationnelle</h3>
+      <p>Intensité du flux d'exécution, volume de tâches récurrentes et pression de delivery.</p></div>
+    </div>
+    <div class="axis-item">
+      <img src="/landing/images/apprentissage.png" alt="Apprentissage">
+      <div class="axis-item-text"><h3>Apprentissage</h3>
+      <p>Rythme d'acquisition de nouvelles compétences et exposition à des domaines inconnus.</p></div>
+    </div>
+    <div class="axis-item">
+      <img src="/landing/images/optionalite.png" alt="Optionalité">
+      <div class="axis-item-text"><h3>Optionalité</h3>
+      <p>Portes ouvertes par chaque trajectoire — et celles qui se ferment.</p></div>
+    </div>
+    <div class="axis-item">
+      <img src="/landing/images/relationnelle.png" alt="Relationnel">
+      <div class="axis-item-text"><h3>Relationnel</h3>
+      <p>Qualité et densité des interactions humaines dans le rôle.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <h2>Prêt à voir votre décision autrement ?</h2>
+  <p>Commencez par découvrir votre archétype professionnel — gratuit, 3 minutes, zéro inscription.</p>
+  <a href="/quiz" class="hero-cta">Découvrir mon archétype</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  NEXTMOVE V4 — Decision Visualization Engine &middot; 2026
+</footer>
+
+</body>
+</html>

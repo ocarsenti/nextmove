@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXTMOVE V4</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --surface: #f1f2f5;
+  --border: #e1e4ea;
+  --text: #16181d;
+  --muted: #6b7280;
+  --accent: #3458e8;
+  --accent-hover: #2543c0;
+  --accent-dim: rgba(52,88,232,0.08);
+  --low: #1d9a5b;
+  --medium: #c2780a;
+  --high: #dc3545;
+  --current-color: #3458e8;
+  --opp-color: #9333ea;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+/* --- LAYOUT --- */
+.container { max-width: 920px; margin: 0 auto; padding: 16px 24px 60px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* --- HEADER --- */
+.app-header { padding: 28px 24px 8px; text-align: center; position: relative; }
+.app-header h1 { font-size: 1.6rem; letter-spacing: 0.02em; }
+.app-header p { color: var(--muted); margin: 6px 0 0; font-size: 0.95rem; }
+.lang-toggle { position: absolute; top: 28px; right: 24px; display: flex; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.lang-toggle button { padding: 4px 10px; background: var(--surface); border: none; font-size: 0.78rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+.lang-toggle button.active { background: var(--accent); color: white; }
+
+/* --- CARDS --- */
+section.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
+section.card h2 { margin: 0 0 14px; font-size: 1.05rem; color: var(--accent); }
+label { display: block; font-size: 0.85rem; color: var(--muted); margin: 12px 0 4px; }
+
+/* --- FORMS --- */
+input[type="text"], input[type="number"], textarea, select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); padding: 9px 10px; font-size: 0.92rem; font-family: inherit;
+}
+textarea { min-height: 70px; resize: vertical; }
+.char-counter { font-size: 0.74rem; color: var(--muted); text-align: right; margin-top: 3px; }
+
+/* --- BUTTONS --- */
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; border: none; border-radius: 10px; font-size: 0.92rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn-secondary:hover { background: var(--accent-dim); }
+.btn-full { width: 100%; }
+.btn-group { display: flex; gap: 12px; margin-top: 14px; }
+
+/* --- STEPS --- */
+.step { display: none; }
+.step.active { display: block; }
+.step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+.step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+.step-dot.active { background: var(--accent); }
+.step-dot.done { background: var(--low); }
+
+/* --- QUESTIONNAIRE --- */
+.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.q-card p { font-size: 0.92rem; font-weight: 600; line-height: 1.4; margin-bottom: 10px; }
+.q-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.88rem; border: 1px solid transparent; transition: all 0.12s; margin-bottom: 4px; }
+.q-option:hover { background: var(--panel); border-color: var(--border); }
+.q-option.selected { background: var(--accent-dim); border-color: var(--accent); }
+.q-option input[type="radio"] { accent-color: var(--accent); flex-shrink: 0; }
+.q-option label { cursor: pointer; }
+.q-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.q-progress-bar { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; height: 6px; overflow: hidden; }
+.q-progress-fill { height: 100%; border-radius: 6px; background: var(--accent); transition: width 0.3s; }
+.q-progress-text { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.q-nav { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+
+/* --- LOADING --- */
+.loading { text-align: center; padding: 60px 20px; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- BADGES --- */
+.badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.03em; }
+.badge-LOW, .badge-low { background: rgba(29,154,91,0.12); color: var(--low); }
+.badge-MEDIUM, .badge-medium { background: rgba(194,120,10,0.12); color: var(--medium); }
+.badge-HIGH, .badge-high { background: rgba(220,53,69,0.12); color: var(--high); }
+.mini-badge { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; font-weight: 700; white-space: nowrap; }
+.mini-badge.LOW { background: rgba(29,154,91,0.12); color: var(--low); }
+.mini-badge.MEDIUM { background: rgba(194,120,10,0.12); color: var(--medium); }
+.mini-badge.HIGH { background: rgba(220,53,69,0.12); color: var(--high); }
+
+/* --- RESULT: JOB PANELS --- */
+.job-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.job-panel .panel-tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 6px; }
+.job-panel.current .panel-tag { color: var(--current-color); }
+.job-panel.opportunity .panel-tag { color: var(--opp-color); }
+.job-panel .panel-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+.job-panel .panel-archetype { font-size: 0.82rem; color: var(--muted); margin-bottom: 6px; }
+.job-panel .panel-desc { font-size: 0.88rem; color: var(--muted); }
+
+/* --- PROS & CONS --- */
+ul.pros, ul.cons { margin: 0; padding-left: 18px; font-size: 0.88rem; line-height: 1.6; }
+ul.pros li { color: var(--low); }
+ul.cons li { color: var(--high); }
+.sub-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; letter-spacing: 0.03em; }
+.tradeoff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 760px) { .tradeoff-grid { grid-template-columns: 1fr; } }
+.tradeoff-col h3 { margin: 0 0 4px; font-size: 0.95rem; }
+
+/* --- ALIGNMENT TABLE --- */
+.alignment-table { width: 100%; border-collapse: collapse; }
+.alignment-table th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.alignment-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 0.88rem; vertical-align: top; }
+.alignment-table .axis-name { font-weight: 600; min-width: 100px; }
+.axis-name-inner { display: flex; align-items: center; gap: 8px; }
+.axis-name-inner img { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; }
+.axis-explanation { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
+
+/* --- ARCHETYPE BARS --- */
+.archetype-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { .archetype-section { grid-template-columns: 1fr; } }
+.archetype-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.archetype-panel h3 { font-size: 0.88rem; margin-bottom: 4px; }
+.archetype-panel .dominance { font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; }
+.arch-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.arch-bar-label { width: 70px; font-size: 0.78rem; color: var(--muted); text-align: right; flex-shrink: 0; }
+.arch-bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 6px; overflow: hidden; }
+.arch-bar-fill { height: 100%; border-radius: 6px; background: var(--accent); transition: width 0.5s; }
+.arch-bar-fill.current { background: var(--current-color); }
+.arch-bar-fill.opp { background: var(--opp-color); }
+.arch-bar-value { width: 32px; font-size: 0.78rem; color: var(--muted); }
+.arch-desc { font-size: 0.78rem; color: var(--muted); margin: -2px 0 6px 82px; }
+
+/* --- USER ARCHETYPE IMAGES --- */
+.user-arch-visual { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 18px; justify-content: center; }
+.user-arch-img-primary { width: 140px; height: auto; border-radius: 14px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.10)); }
+.user-arch-img-secondary { width: 72px; height: auto; border-radius: 10px; opacity: 0.75; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08)); }
+.user-arch-img-label { font-size: 0.72rem; font-weight: 700; text-align: center; margin-top: 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.user-arch-img-wrapper { display: flex; flex-direction: column; align-items: center; }
+
+/* --- TENSION CARDS --- */
+.tension-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--border); }
+.tension-card.intensity-low { border-left-color: var(--low); }
+.tension-card.intensity-medium { border-left-color: var(--medium); }
+.tension-card.intensity-high { border-left-color: var(--high); }
+.tension-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+.tension-axis { font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.tension-badges { display: flex; gap: 6px; }
+.tension-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+@media (max-width: 760px) { .tension-compare { grid-template-columns: 1fr; } }
+.tension-side { font-size: 0.85rem; padding: 10px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); }
+.tension-side-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 3px; }
+.tension-side.current .tension-side-tag { color: var(--current-color); }
+.tension-side.opportunity .tension-side-tag { color: var(--opp-color); }
+.tension-interpretation { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+
+/* --- OPTIONALITY --- */
+.opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 760px) { .opt-grid { grid-template-columns: 1fr; } }
+.opt-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.opt-box h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+.opt-box ul { list-style: none; padding: 0; }
+.opt-box li { font-size: 0.88rem; padding: 3px 0; display: flex; align-items: flex-start; gap: 6px; }
+.opt-box li::before { content: "→"; color: var(--accent); flex-shrink: 0; }
+.opt-box.doors-closed li::before { content: "×"; color: var(--high); }
+.opt-meta { display: flex; gap: 14px; flex-wrap: wrap; }
+.opt-meta-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 180px; }
+.opt-meta-item .meta-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 4px; }
+.opt-meta-item .meta-value { font-size: 0.88rem; }
+
+/* --- SCENARIOS --- */
+.scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { .scenario-grid { grid-template-columns: 1fr; } }
+.scenario-grid h3 { font-size: 0.88rem; color: var(--muted); margin: 0 0 10px; }
+.scenario-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.scenario-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+.scenario-name { font-weight: 600; font-size: 0.88rem; }
+.scenario-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+
+/* --- UNCERTAINTY --- */
+.uncertainty-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+.uncertainty-text { font-size: 0.88rem; flex: 1; margin-right: 10px; }
+.question-row { margin-bottom: 10px; }
+.question-text { font-size: 0.88rem; line-height: 1.4; margin-bottom: 4px; }
+.question-impact { display: flex; align-items: center; gap: 8px; }
+
+/* --- DECISION FRAMING --- */
+.framing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .framing-grid { grid-template-columns: 1fr; } }
+.framing-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; transition: border-color 0.2s; }
+.framing-card:hover { border-color: var(--accent); }
+.framing-letter { font-size: 1.4rem; font-weight: 800; color: var(--accent); margin-bottom: 3px; }
+.framing-label { font-size: 0.88rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+.framing-meaning { font-size: 0.85rem; color: var(--muted); }
+
+/* --- SHARE CARD --- */
+.decision-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+.decision-card .brand { color: var(--accent); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.08em; }
+.decision-card h3 { font-size: 1.1rem; margin: 8px 0 14px; }
+.decision-card .row { font-size: 0.85rem; color: var(--muted); margin-bottom: 3px; }
+.decision-card .row strong { color: var(--text); }
+.decision-card .discuss { margin-top: 16px; padding: 12px 14px; background: var(--panel); border-left: 3px solid var(--accent); border-radius: 8px; font-size: 0.88rem; font-style: italic; }
+.decision-card-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+@media (max-width: 480px) { .decision-card-cols { grid-template-columns: 1fr; } }
+.decision-card .sub-label { font-size: 0.68rem; text-transform: uppercase; color: var(--muted); margin: 8px 0 4px; }
+.decision-card ul { margin: 0; padding-left: 16px; font-size: 0.82rem; line-height: 1.5; }
+.decision-card ul.pros li { color: var(--low); }
+.decision-card ul.cons li { color: var(--high); }
+.share-wrap { margin-top: 14px; }
+#shareMenu { display: none; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px; margin-top: 8px; }
+#shareMenu button { display: block; width: 100%; text-align: left; padding: 10px 12px; background: transparent; border: none; color: var(--text); font-size: 0.88rem; border-radius: 6px; cursor: pointer; }
+#shareMenu button:hover { background: var(--surface); }
+#shareStatus { font-size: 0.78rem; color: var(--muted); margin-top: 6px; text-align: center; min-height: 1em; }
+
+/* --- REFINE --- */
+.refine-box textarea { min-height: 90px; }
+
+/* --- ERROR --- */
+.error-banner { background: rgba(220,53,69,0.08); border: 1px solid var(--high); border-radius: 10px; padding: 12px 16px; color: var(--high); font-size: 0.88rem; display: none; margin-bottom: 16px; }
+
+/* --- PRINT --- */
+@media print { .app-header, .step:not(.result-step), .btn, .share-wrap, #shareMenu, #shareStatus, .refine-box, .lang-toggle, .step-indicator { display: none !important; } section.card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>NEXTMOVE</h1>
+  <p id="headerSubtitle"></p>
+  <div class="lang-toggle">
+    <button id="langFr" class="active" onclick="setLang('fr')">FR</button>
+    <button id="langEn" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot-0"></div>
+    <div class="step-dot" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+  </div>
+
+  <!-- STEP 0: QUESTIONNAIRE -->
+  <div class="step active" id="step-0">
+    <section class="card">
+      <h2 id="qTitle"></h2>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;" id="qSubtitle"></p>
+      <div class="q-progress">
+        <div class="q-progress-bar"><div class="q-progress-fill" id="qProgressFill" style="width:0%"></div></div>
+        <span class="q-progress-text" id="qProgressText">0 / 22</span>
+      </div>
+      <div id="qContainer"></div>
+      <div class="q-nav">
+        <button class="btn btn-secondary" id="qPrev" disabled></button>
+        <button class="btn btn-primary" id="qNext" disabled></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 1: CURRENT JOB -->
+  <div class="step" id="step-1">
+    <section class="card">
+      <h2 id="s1Title"></h2>
+      <label id="s1TitleLabel"></label>
+      <input type="text" id="currentTitle" placeholder="">
+      <label id="s1DescLabel"></label>
+      <textarea id="currentDesc" maxlength="6000"></textarea>
+      <div class="char-counter" id="currentDescCounter">0 / 6000</div>
+      <label id="s1LikesLabel"></label>
+      <textarea id="currentLikes" maxlength="800"></textarea>
+      <div class="char-counter" id="currentLikesCounter">0 / 800</div>
+      <label id="s1DislikesLabel"></label>
+      <textarea id="currentDislikes" maxlength="800"></textarea>
+      <div class="char-counter" id="currentDislikesCounter">0 / 800</div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="goStep(0)" id="s1Back"></button>
+        <button class="btn btn-primary" style="flex:1" id="toStep2" disabled></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 2: OPPORTUNITY -->
+  <div class="step" id="step-2">
+    <section class="card">
+      <h2 id="s2Title"></h2>
+      <label id="s2TitleLabel"></label>
+      <input type="text" id="oppTitle" placeholder="">
+      <label id="s2DescLabel"></label>
+      <textarea id="oppDesc" maxlength="6000"></textarea>
+      <div class="char-counter" id="oppDescCounter">0 / 6000</div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="goStep(1)" id="s2Back"></button>
+        <button class="btn btn-primary" style="flex:1" id="analyzeBtn" disabled></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 3: LOADING -->
+  <div class="step" id="step-3">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p style="color:var(--muted);" id="loadingText"></p>
+    </div>
+  </div>
+
+  <!-- STEP 4: RESULT -->
+  <div class="step result-step" id="step-4">
+    <div class="error-banner" id="errorBanner"></div>
+
+    <!-- Header -->
+    <section class="card" style="text-align:center;">
+      <h2 id="rTitle"></h2>
+      <p style="color:var(--muted);font-size:0.88rem;" id="rSubtitle"></p>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:4px;font-style:italic;" id="rNote"></p>
+    </section>
+
+    <!-- Key Insights -->
+    <section class="card">
+      <h2 id="insightsTitle"></h2>
+      <ul class="plain" id="insightsList" style="list-style:none;padding:0;"></ul>
+    </section>
+
+    <!-- Job Panels -->
+    <div class="grid-2" id="jobPanelsGrid"></div>
+
+    <!-- Pros & Cons -->
+    <section class="card">
+      <h2 id="prosConsTitle"></h2>
+      <div class="tradeoff-grid">
+        <div class="tradeoff-col">
+          <h3 id="prosConsCurrentH3"></h3>
+          <div class="sub-label" id="prosLabel1"></div><ul class="pros" id="currentPros"></ul>
+          <div class="sub-label" id="consLabel1"></div><ul class="cons" id="currentCons"></ul>
+        </div>
+        <div class="tradeoff-col">
+          <h3 id="prosConsOppH3"></h3>
+          <div class="sub-label" id="prosLabel2"></div><ul class="pros" id="oppPros"></ul>
+          <div class="sub-label" id="consLabel2"></div><ul class="cons" id="oppCons"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- User Archetype -->
+    <section class="card">
+      <h2 id="userArchTitle"></h2>
+      <div id="userArchContainer"></div>
+    </section>
+
+    <!-- Alignment Grid -->
+    <section class="card">
+      <h2 id="alignmentTitle"></h2>
+      <div style="overflow-x:auto;">
+        <table class="alignment-table" id="alignmentTable">
+          <thead><tr><th id="alignCol0"></th><th id="alignCol1" style="color:var(--current-color)"></th><th id="alignCol2" style="color:var(--opp-color)"></th></tr></thead>
+          <tbody id="alignmentBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Archetype Distributions -->
+    <section class="card">
+      <h2 id="archTitle"></h2>
+      <div class="archetype-section" id="archetypeSection"></div>
+    </section>
+
+    <!-- Tension Map -->
+    <section class="card">
+      <h2 id="tensionTitle"></h2>
+      <div id="tensionContainer"></div>
+    </section>
+
+    <!-- Optionality Map -->
+    <section class="card">
+      <h2 id="optTitle"></h2>
+      <div id="optContainer"></div>
+    </section>
+
+    <!-- Scenarios -->
+    <section class="card">
+      <h2 id="scenarioTitle"></h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:-6px;margin-bottom:12px;" id="scenarioSubtitle"></p>
+      <div class="scenario-grid">
+        <div><h3 id="scenarioCurrentH3"></h3><div id="currentScenarios"></div></div>
+        <div><h3 id="scenarioOppH3"></h3><div id="oppScenarios"></div></div>
+      </div>
+    </section>
+
+    <!-- Uncertainty -->
+    <section class="card">
+      <h2 id="uncTitle"></h2>
+      <div class="sub-label" id="uncUnknownsLabel"></div>
+      <div id="uncertaintyContainer"></div>
+      <div class="sub-label" style="margin-top:14px;" id="uncQuestionsLabel"></div>
+      <div id="questionsContainer"></div>
+    </section>
+
+    <!-- Decision Framing -->
+    <section class="card">
+      <h2 id="framingTitle"></h2>
+      <div class="framing-grid" id="framingGrid"></div>
+    </section>
+
+    <!-- Refine -->
+    <section class="card refine-box">
+      <h2 id="refineTitle"></h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:-6px;" id="refineDesc"></p>
+      <textarea id="clarificationsInput" style="margin-top:10px;"></textarea>
+      <button class="btn btn-primary btn-full" style="margin-top:10px;" id="refineBtn"></button>
+    </section>
+
+    <!-- Share Card -->
+    <section class="card">
+      <h2 id="shareTitle"></h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:-6px;" id="shareDesc"></p>
+      <div class="decision-card" id="decisionCard"></div>
+      <div class="share-wrap">
+        <button class="btn btn-secondary btn-full" id="shareBtn"></button>
+        <div id="shareMenu">
+          <button data-action="copy" id="shareCopy"></button>
+          <button data-action="whatsapp">WhatsApp</button>
+          <button data-action="linkedin">LinkedIn</button>
+        </div>
+      </div>
+      <div id="shareStatus"></div>
+    </section>
+
+    <!-- Export + Restart -->
+    <div class="btn-group" style="justify-content:center;margin-top:8px;">
+      <button class="btn btn-secondary" id="exportPdfBtn"></button>
+      <button class="btn btn-secondary" onclick="restart();" id="restartBtn"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// I18N
+// =====================================================================
+const T = {
+  fr: {
+    subtitle: "Compromis, pas verdicts. Décisions sous incertitude.",
+    qTitle: "Ce qui compte pour toi au travail",
+    qSubtitle: "22 questions pour révéler tes préférences. Pas de bonnes ou mauvaises réponses.",
+    prev: "← Précédent",
+    next: "Suivant →",
+    finish: "Terminer ✓",
+    s1Title: "A. Poste actuel",
+    s1TitleLabel: "Titre du poste",
+    s1TitlePh: "ex: Senior Backend Engineer",
+    s1DescLabel: "Description",
+    s1DescPh: "Décris ton rôle, tes responsabilités, le contexte...",
+    s1LikesLabel: "Ce que tu aimes",
+    s1LikesPh: "ex: l'équipe, l'autonomie technique...",
+    s1DislikesLabel: "Ce que tu n'aimes pas",
+    s1DislikesPh: "ex: manque de perspective, charge de travail...",
+    s1Back: "← Profil",
+    s1Next: "Suivant →",
+    s2Title: "B. Opportunité",
+    s2TitleLabel: "Titre du poste",
+    s2TitlePh: "ex: Product Manager — Startup HealthTech",
+    s2DescLabel: "Description de l'opportunité",
+    s2DescPh: "Décris l'opportunité : rôle, entreprise, contexte, ce qui t'attire et tes doutes...",
+    s2Back: "← Poste actuel",
+    analyze: "Lancer l'analyse",
+    loading: "Analyse en cours — extraction des structures décisionnelles...",
+    rTitle: "CARTE DE DÉCISION — VUE DES COMPROMIS",
+    rSubtitle: "Poste actuel vs Opportunité",
+    rNote: "Aucune recommandation. Seulement des compromis structurés.",
+    insightsTitle: "Points clés",
+    prosConsTitle: "Avantages & Inconvénients",
+    prosConsCurrentH3: "Poste actuel",
+    prosConsOppH3: "Opportunité",
+    pros: "Avantages",
+    cons: "Inconvénients",
+    userArchTitle: "Tes modes de travail",
+    alignmentTitle: "Grille de comparaison",
+    alignCol0: "Axe",
+    alignCol1: "Actuel",
+    alignCol2: "Opportunité",
+    axisLabels: { autonomy: "Autonomie", uncertainty: "Incertitude", operational_load: "Charge opérationnelle", learning: "Apprentissage", optionality: "Optionalité", relational: "Relationnel" },
+    archTitle: "Archétypes actuellement exprimés",
+    current: "Actuel",
+    opportunity: "Opportunité",
+    tensionTitle: "Carte des tensions",
+    optTitle: "Carte d'optionalité",
+    doorsCurrentLabel: "Portes ouvertes — Actuel",
+    doorsOppLabel: "Portes ouvertes — Opportunité",
+    doorsClosedLabel: "Portes fermées",
+    reversibilityLabel: "Risque de réversibilité",
+    switchingCostLabel: "Coût de transition",
+    scenarioTitle: "Scénarios conditionnels",
+    scenarioSubtitle: "Futurs plausibles pour chaque trajectoire — pas des prédictions.",
+    scenarioCurrentH3: "Si trajectoire actuelle",
+    scenarioOppH3: "Si opportunité",
+    uncTitle: "Analyse d'incertitude",
+    uncUnknownsLabel: "Inconnues critiques",
+    uncQuestionsLabel: "Questions à poser avant de décider",
+    framingTitle: "Cadre de décision",
+    stayLabel: "Rester",
+    switchLabel: "Changer",
+    waitLabel: "Attendre",
+    refineTitle: "Affiner l'analyse",
+    refineDesc: "Tu as eu des réponses (entretien, recherche) ? Colle ce que tu as appris et relance l'analyse.",
+    refinePh: "ex: Le runway de la startup est de 14 mois, l'équipe compte 8 personnes...",
+    refineBtn: "Relancer l'analyse avec ces clarifications",
+    shareTitle: "Carte de décision",
+    shareDesc: "Une carte simplifiée à partager pour ouvrir la discussion.",
+    shareBtn: "Partager cette carte",
+    shareCopy: "Copier le lien",
+    exportPdf: "Exporter en PDF",
+    restart: "Nouvelle analyse",
+    discuss: "Qu'est-ce que tu ferais à ma place, et pourquoi ?",
+    domine: "domine",
+    domineLeg: "domine légèrement",
+    present: "présent",
+    secondaire: "secondaire",
+    benefitCurrent: "→ Actuel",
+    benefitOpp: "→ Opportunité",
+    benefitBoth: "↔ Les deux",
+    benefitNeither: "— Neutre",
+    copied: "Lien copié.",
+    errorPrefix: "Erreur : ",
+  },
+  en: {
+    subtitle: "Trade-offs, not verdicts. Decisions under uncertainty.",
+    qTitle: "What matters to you at work",
+    qSubtitle: "22 questions to reveal your preferences. No right or wrong answers.",
+    prev: "← Previous",
+    next: "Next →",
+    finish: "Finish ✓",
+    s1Title: "A. Current job",
+    s1TitleLabel: "Job title",
+    s1TitlePh: "e.g., Senior Backend Engineer",
+    s1DescLabel: "Description",
+    s1DescPh: "Describe your role, responsibilities, context...",
+    s1LikesLabel: "What you like",
+    s1LikesPh: "e.g., the team, technical autonomy...",
+    s1DislikesLabel: "What you don't like",
+    s1DislikesPh: "e.g., lack of perspective, workload...",
+    s1Back: "← Profile",
+    s1Next: "Next →",
+    s2Title: "B. Opportunity",
+    s2TitleLabel: "Job title",
+    s2TitlePh: "e.g., Product Manager — HealthTech Startup",
+    s2DescLabel: "Opportunity description",
+    s2DescPh: "Describe the opportunity: role, company, context, what attracts you and your doubts...",
+    s2Back: "← Current job",
+    analyze: "Run analysis",
+    loading: "Analysis in progress — extracting decision structures...",
+    rTitle: "DECISION MAP — TRADE-OFF VIEW",
+    rSubtitle: "Current Job vs Opportunity",
+    rNote: "No recommendation. Only structured trade-offs.",
+    insightsTitle: "Key insights",
+    prosConsTitle: "Pros & Cons",
+    prosConsCurrentH3: "Current job",
+    prosConsOppH3: "Opportunity",
+    pros: "Pros",
+    cons: "Cons",
+    userArchTitle: "Your working modes",
+    alignmentTitle: "Alignment Grid",
+    alignCol0: "Axis",
+    alignCol1: "Current",
+    alignCol2: "Opportunity",
+    axisLabels: { autonomy: "Autonomy", uncertainty: "Uncertainty", operational_load: "Operational Load", learning: "Learning", optionality: "Optionality", relational: "Relational" },
+    archTitle: "Currently expressed archetypes",
+    current: "Current",
+    opportunity: "Opportunity",
+    tensionTitle: "Tension Map",
+    optTitle: "Optionality Map",
+    doorsCurrentLabel: "Doors opened — Current",
+    doorsOppLabel: "Doors opened — Opportunity",
+    doorsClosedLabel: "Doors closed",
+    reversibilityLabel: "Reversibility risk",
+    switchingCostLabel: "Switching cost",
+    scenarioTitle: "Conditional Scenarios",
+    scenarioSubtitle: "Plausible futures for each trajectory — not predictions.",
+    scenarioCurrentH3: "If current trajectory",
+    scenarioOppH3: "If opportunity",
+    uncTitle: "Uncertainty Analysis",
+    uncUnknownsLabel: "Critical unknowns",
+    uncQuestionsLabel: "Questions to ask before deciding",
+    framingTitle: "Decision Framing",
+    stayLabel: "Stay",
+    switchLabel: "Switch",
+    waitLabel: "Wait",
+    refineTitle: "Refine the analysis",
+    refineDesc: "Got answers (interview, research)? Paste what you learned and rerun the analysis.",
+    refinePh: "e.g., The startup runway is 14 months, the team has 8 people...",
+    refineBtn: "Rerun analysis with these clarifications",
+    shareTitle: "Decision Card",
+    shareDesc: "A simplified card to share and open the discussion.",
+    shareBtn: "Share this card",
+    shareCopy: "Copy link",
+    exportPdf: "Export as PDF",
+    restart: "New analysis",
+    discuss: "What would you do in my place, and why?",
+    domine: "dominates",
+    domineLeg: "slightly dominates",
+    present: "present",
+    secondaire: "secondary",
+    benefitCurrent: "→ Current",
+    benefitOpp: "→ Opportunity",
+    benefitBoth: "↔ Both",
+    benefitNeither: "— Neutral",
+    copied: "Link copied.",
+    errorPrefix: "Error: ",
+  }
+};
+
+let lang = 'fr';
+function t(key) { return T[lang][key] || T['fr'][key] || key; }
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('langFr').classList.toggle('active', l === 'fr');
+  document.getElementById('langEn').classList.toggle('active', l === 'en');
+  applyLabels();
+  if (questions.length) renderQuestion();
+  if (lastCard) renderDecisionCard(lastCard);
+}
+
+function applyLabels() {
+  document.getElementById('headerSubtitle').textContent = t('subtitle');
+  document.getElementById('qTitle').textContent = t('qTitle');
+  document.getElementById('qSubtitle').textContent = t('qSubtitle');
+  document.getElementById('qPrev').textContent = t('prev');
+  document.getElementById('qNext').textContent = qIndex === questions.length - 1 ? t('finish') : t('next');
+  document.getElementById('s1Title').textContent = t('s1Title');
+  document.getElementById('s1TitleLabel').textContent = t('s1TitleLabel');
+  document.getElementById('currentTitle').placeholder = t('s1TitlePh');
+  document.getElementById('s1DescLabel').textContent = t('s1DescLabel');
+  document.getElementById('currentDesc').placeholder = t('s1DescPh');
+  document.getElementById('s1LikesLabel').textContent = t('s1LikesLabel');
+  document.getElementById('currentLikes').placeholder = t('s1LikesPh');
+  document.getElementById('s1DislikesLabel').textContent = t('s1DislikesLabel');
+  document.getElementById('currentDislikes').placeholder = t('s1DislikesPh');
+  document.getElementById('s1Back').textContent = t('s1Back');
+  document.getElementById('toStep2').textContent = t('s1Next');
+  document.getElementById('s2Title').textContent = t('s2Title');
+  document.getElementById('s2TitleLabel').textContent = t('s2TitleLabel');
+  document.getElementById('oppTitle').placeholder = t('s2TitlePh');
+  document.getElementById('s2DescLabel').textContent = t('s2DescLabel');
+  document.getElementById('oppDesc').placeholder = t('s2DescPh');
+  document.getElementById('s2Back').textContent = t('s2Back');
+  document.getElementById('analyzeBtn').textContent = t('analyze');
+  document.getElementById('loadingText').textContent = t('loading');
+  document.getElementById('refineTitle').textContent = t('refineTitle');
+  document.getElementById('refineDesc').textContent = t('refineDesc');
+  document.getElementById('clarificationsInput').placeholder = t('refinePh');
+  document.getElementById('refineBtn').textContent = t('refineBtn');
+  document.getElementById('shareBtn').textContent = t('shareBtn');
+  document.getElementById('shareCopy').textContent = t('shareCopy');
+  document.getElementById('exportPdfBtn').textContent = t('exportPdf');
+  document.getElementById('restartBtn').textContent = t('restart');
+  // Result section static labels
+  document.getElementById('insightsTitle').textContent = t('insightsTitle');
+  document.getElementById('prosConsTitle').textContent = t('prosConsTitle');
+  document.getElementById('prosConsCurrentH3').textContent = t('prosConsCurrentH3');
+  document.getElementById('prosConsOppH3').textContent = t('prosConsOppH3');
+  document.getElementById('prosLabel1').textContent = t('pros');
+  document.getElementById('consLabel1').textContent = t('cons');
+  document.getElementById('prosLabel2').textContent = t('pros');
+  document.getElementById('consLabel2').textContent = t('cons');
+  document.getElementById('userArchTitle').textContent = t('userArchTitle');
+  document.getElementById('alignmentTitle').textContent = t('alignmentTitle');
+  document.getElementById('alignCol0').textContent = t('alignCol0');
+  document.getElementById('alignCol1').textContent = t('alignCol1');
+  document.getElementById('alignCol2').textContent = t('alignCol2');
+  document.getElementById('archTitle').textContent = t('archTitle');
+  document.getElementById('tensionTitle').textContent = t('tensionTitle');
+  document.getElementById('optTitle').textContent = t('optTitle');
+  document.getElementById('scenarioTitle').textContent = t('scenarioTitle');
+  document.getElementById('scenarioSubtitle').textContent = t('scenarioSubtitle');
+  document.getElementById('scenarioCurrentH3').textContent = t('scenarioCurrentH3');
+  document.getElementById('scenarioOppH3').textContent = t('scenarioOppH3');
+  document.getElementById('uncTitle').textContent = t('uncTitle');
+  document.getElementById('uncUnknownsLabel').textContent = t('uncUnknownsLabel');
+  document.getElementById('uncQuestionsLabel').textContent = t('uncQuestionsLabel');
+  document.getElementById('framingTitle').textContent = t('framingTitle');
+  document.getElementById('shareTitle').textContent = t('shareTitle');
+  document.getElementById('shareDesc').textContent = t('shareDesc');
+}
+
+// =====================================================================
+// NAVIGATION
+// =====================================================================
+const STEPS = 5;
+let currentStep = 0;
+function goStep(n) {
+  for (let i = 0; i < STEPS; i++) document.getElementById('step-'+i).classList.toggle('active', i === n);
+  document.querySelectorAll('.step-dot').forEach((d,i) => { d.className = 'step-dot'; if (i < n) d.classList.add('done'); if (i === n) d.classList.add('active'); });
+  currentStep = n;
+}
+
+// =====================================================================
+// QUESTIONNAIRE
+// =====================================================================
+let questions = [];
+let qIndex = 0;
+let qAnswers = {};
+let profileVector = {};
+let lastCard = null;
+
+async function loadQuestionnaire() {
+  const r = await fetch('/questionnaire');
+  const data = await r.json();
+  questions = data.questions;
+  renderQuestion();
+  applyLabels();
+}
+
+function renderQuestion() {
+  const q = questions[qIndex];
+  const answered = Object.keys(qAnswers).length;
+  const pct = Math.round((answered / questions.length) * 100);
+  document.getElementById('qProgressFill').style.width = pct + '%';
+  document.getElementById('qProgressText').textContent = `${answered} / ${questions.length}`;
+  const container = document.getElementById('qContainer');
+  const saved = qAnswers[q.id] || '';
+  let html = `<div class="q-card"><p>${q.text}</p>`;
+  q.options.forEach(opt => {
+    const checked = saved === opt.value ? 'checked' : '';
+    const sel = checked ? ' selected' : '';
+    html += `<label class="q-option${sel}">
+      <input type="radio" name="q_${q.id}" value="${opt.value}" ${checked}>
+      <span>${opt.label}</span>
+    </label>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  container.querySelectorAll('input[type="radio"]').forEach(input => {
+    input.addEventListener('change', () => {
+      qAnswers[q.id] = input.value;
+      container.querySelectorAll('.q-option').forEach(o => o.classList.remove('selected'));
+      input.closest('.q-option').classList.add('selected');
+      updateQNav();
+    });
+  });
+  updateQNav();
+}
+
+function updateQNav() {
+  const q = questions[qIndex];
+  document.getElementById('qPrev').disabled = qIndex === 0;
+  const nextBtn = document.getElementById('qNext');
+  nextBtn.disabled = !qAnswers[q.id];
+  nextBtn.textContent = qIndex === questions.length - 1 ? t('finish') : t('next');
+}
+
+document.getElementById('qPrev').addEventListener('click', () => { if (qIndex > 0) { qIndex--; renderQuestion(); } });
+document.getElementById('qNext').addEventListener('click', async () => {
+  if (qIndex < questions.length - 1) { qIndex++; renderQuestion(); }
+  else {
+    const r = await fetch('/questionnaire/score', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(qAnswers) });
+    profileVector = await r.json();
+    goStep(1);
+  }
+});
+
+// =====================================================================
+// INPUT VALIDATION + CHAR COUNTERS
+// =====================================================================
+function setupCharCounter(fieldId, max) {
+  const f = document.getElementById(fieldId), c = document.getElementById(fieldId + 'Counter');
+  f.addEventListener('input', () => { c.textContent = `${f.value.length} / ${max}`; validateInputs(); });
+}
+setupCharCounter('currentDesc', 6000);
+setupCharCounter('currentLikes', 800);
+setupCharCounter('currentDislikes', 800);
+setupCharCounter('oppDesc', 6000);
+
+function validateInputs() {
+  const c = document.getElementById('currentDesc').value.trim().length > 0;
+  const o = document.getElementById('oppDesc').value.trim().length > 0;
+  document.getElementById('toStep2').disabled = !c;
+  document.getElementById('analyzeBtn').disabled = !o;
+}
+document.getElementById('currentDesc').addEventListener('input', validateInputs);
+document.getElementById('oppDesc').addEventListener('input', validateInputs);
+document.getElementById('toStep2').addEventListener('click', () => goStep(2));
+
+// =====================================================================
+// ANALYZE
+// =====================================================================
+document.getElementById('analyzeBtn').addEventListener('click', () => runAnalysis(null));
+document.getElementById('refineBtn').addEventListener('click', () => {
+  const c = document.getElementById('clarificationsInput').value.trim();
+  if (c) runAnalysis(c);
+});
+
+async function runAnalysis(clarifications) {
+  goStep(3);
+  const payload = {
+    current_job: { title: document.getElementById('currentTitle').value.trim(), description: document.getElementById('currentDesc').value.trim() + (document.getElementById('currentLikes').value.trim() ? '\n\nCe que j\'aime: ' + document.getElementById('currentLikes').value.trim() : '') + (document.getElementById('currentDislikes').value.trim() ? '\n\nCe que je n\'aime pas: ' + document.getElementById('currentDislikes').value.trim() : '') },
+    opportunity: { title: document.getElementById('oppTitle').value.trim(), description: document.getElementById('oppDesc').value.trim() },
+    profile: profileVector,
+  };
+  if (clarifications) payload.clarifications = clarifications;
+  try {
+    const r = await fetch('/analyze', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if (!r.ok) { const err = await r.json().catch(() => ({detail: r.statusText})); throw new Error(err.detail || r.statusText); }
+    const card = await r.json();
+    lastCard = card;
+    renderDecisionCard(card);
+    goStep(4);
+  } catch (e) {
+    const banner = document.getElementById('errorBanner');
+    banner.textContent = t('errorPrefix') + e.message;
+    banner.style.display = 'block';
+    goStep(4);
+  }
+}
+
+// =====================================================================
+// HELPERS
+// =====================================================================
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function fillList(elId, items) { const el = document.getElementById(elId); el.innerHTML = ''; (items||[]).forEach(txt => { const li = document.createElement('li'); li.textContent = txt; el.appendChild(li); }); }
+const ARCHETYPES = ['Builder','Expert','Operator','Leader','Explorer'];
+const ARCHETYPE_IMG = {Builder:'/landing/images/builder.png',Expert:'/landing/images/expert.png',Operator:'/landing/images/operator.png',Leader:'/landing/images/leader.png',Explorer:'/landing/images/explorer.png'};
+const AXIS_IMG = {autonomy:'/landing/images/autonomie.png',uncertainty:'/landing/images/incertitude.png',operational_load:'/landing/images/charge_operationnelle.png',learning:'/landing/images/apprentissage.png',optionality:'/landing/images/optionalite.png',relational:'/landing/images/relationnelle.png'};
+
+function describeArchetype(dist) {
+  const sorted = ARCHETYPES.map(a => ({name:a, val:dist[a]})).sort((a,b) => b.val - a.val || a.name.localeCompare(b.name));
+  const lines = [];
+  sorted.forEach((item, i) => {
+    if (i === 0) lines.push(`${item.name} ${item.val >= 40 ? t('domine') : t('domineLeg')}`);
+    else if (item.val >= 20) lines.push(`${item.name} ${t('present')}`);
+    else if (item.val >= 10) lines.push(`${item.name} ${t('secondaire')}`);
+  });
+  return lines.join(' · ');
+}
+
+// =====================================================================
+// RENDER DECISION CARD
+// =====================================================================
+function renderDecisionCard(card) {
+  document.getElementById('errorBanner').style.display = 'none';
+  // Header
+  document.getElementById('rTitle').textContent = t('rTitle');
+  document.getElementById('rSubtitle').textContent = t('rSubtitle');
+  document.getElementById('rNote').textContent = t('rNote');
+
+  // Key Insights
+  const il = document.getElementById('insightsList'); il.innerHTML = '';
+  (card.key_insights||[]).forEach(txt => { const li = document.createElement('li'); li.style.cssText = 'padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:0.92rem;'; li.textContent = txt; il.appendChild(li); });
+
+  // Job Panels
+  document.getElementById('jobPanelsGrid').innerHTML = `
+    <div class="job-panel current"><div class="panel-tag">${t('current')}</div><div class="panel-title">${esc(card.job_panels.current.title)}</div><div class="panel-archetype">${esc(card.job_panels.current.archetype_signature)}</div><div class="panel-desc">${esc(card.job_panels.current.short_description)}</div></div>
+    <div class="job-panel opportunity"><div class="panel-tag">${t('opportunity')}</div><div class="panel-title">${esc(card.job_panels.opportunity.title)}</div><div class="panel-archetype">${esc(card.job_panels.opportunity.archetype_signature)}</div><div class="panel-desc">${esc(card.job_panels.opportunity.short_description)}</div></div>`;
+
+  // Pros & Cons
+  fillList('currentPros', card.current_pros);
+  fillList('currentCons', card.current_cons);
+  fillList('oppPros', card.opportunity_pros);
+  fillList('oppCons', card.opportunity_cons);
+
+  // User Archetype
+  const uDist = card.user_archetype.distribution;
+  const uSorted = ARCHETYPES.map(a => ({name:a, val:uDist[a]})).sort((a,b) => b.val - a.val || a.name.localeCompare(b.name));
+  let uHtml = '';
+  uSorted.forEach(item => {
+    if (item.val === 0) return;
+    let desc = item.val >= 50 ? t('domine') : item.val >= 25 ? t('present') : t('secondaire');
+    uHtml += `<div class="arch-bar-row"><div class="arch-bar-label">${item.name}</div><div class="arch-bar-track"><div class="arch-bar-fill" style="width:${item.val}%"></div></div><div class="arch-bar-value">${item.val}%</div></div><div class="arch-desc">${item.name} ${desc}</div>`;
+  });
+  let archImgHtml = '<div class="user-arch-visual">';
+  if (uSorted[0] && uSorted[0].val > 0) archImgHtml += `<div class="user-arch-img-wrapper"><img class="user-arch-img-primary" src="${ARCHETYPE_IMG[uSorted[0].name]}" alt="${uSorted[0].name}"><div class="user-arch-img-label">${uSorted[0].name} (${uSorted[0].val}%)</div></div>`;
+  if (uSorted[1] && uSorted[1].val > 0) archImgHtml += `<div class="user-arch-img-wrapper"><img class="user-arch-img-secondary" src="${ARCHETYPE_IMG[uSorted[1].name]}" alt="${uSorted[1].name}"><div class="user-arch-img-label">${uSorted[1].name} (${uSorted[1].val}%)</div></div>`;
+  archImgHtml += '</div>';
+  document.getElementById('userArchContainer').innerHTML = `${archImgHtml}<div class="archetype-panel" style="max-width:500px;"><div class="dominance" style="margin-bottom:12px;">${esc(describeArchetype(uDist))}</div>${uHtml}</div>`;
+
+  // Alignment Grid
+  const axes = ['autonomy','uncertainty','operational_load','learning','optionality','relational'];
+  const tbody = document.getElementById('alignmentBody'); tbody.innerHTML = '';
+  axes.forEach(axis => {
+    const c = card.profile_alignment_grid.current[axis], o = card.profile_alignment_grid.opportunity[axis];
+    const row = document.createElement('tr');
+    row.innerHTML = `<td class="axis-name"><div class="axis-name-inner"><img src="${AXIS_IMG[axis]}" alt="${axis}">${t('axisLabels')[axis]}</div></td><td><span class="badge badge-${c.level}">${c.level}</span><div class="axis-explanation">${esc(c.explanation)}</div></td><td><span class="badge badge-${o.level}">${o.level}</span><div class="axis-explanation">${esc(o.explanation)}</div></td>`;
+    tbody.appendChild(row);
+  });
+
+  // Archetype Distributions
+  const archSection = document.getElementById('archetypeSection'); archSection.innerHTML = '';
+  [{cls:'current',label:t('current'),fillCls:'current',data:card.archetype_layer.current},{cls:'opp',label:t('opportunity'),fillCls:'opp',data:card.archetype_layer.opportunity}].forEach(side => {
+    let bars = '';
+    ARCHETYPES.forEach(a => { const v = side.data.distribution[a]; bars += `<div class="arch-bar-row"><div class="arch-bar-label">${a}</div><div class="arch-bar-track"><div class="arch-bar-fill ${side.fillCls}" style="width:${v}%"></div></div><div class="arch-bar-value">${v}%</div></div>`; });
+    archSection.innerHTML += `<div class="archetype-panel"><h3>${side.label}</h3><div class="dominance">${esc(describeArchetype(side.data.distribution))}</div>${bars}</div>`;
+  });
+
+  // Tension Map
+  const tc = document.getElementById('tensionContainer'); tc.innerHTML = '';
+  (card.tension_map||[]).forEach(ten => {
+    const bb = ten.who_benefits === 'current' ? `<span class="badge" style="background:rgba(52,88,232,0.1);color:var(--current-color)">${t('benefitCurrent')}</span>`
+      : ten.who_benefits === 'opportunity' ? `<span class="badge" style="background:rgba(147,51,234,0.1);color:var(--opp-color)">${t('benefitOpp')}</span>`
+      : ten.who_benefits === 'both' ? `<span class="badge" style="background:var(--accent-dim);color:var(--accent)">${t('benefitBoth')}</span>`
+      : `<span class="badge" style="background:var(--surface);color:var(--muted)">${t('benefitNeither')}</span>`;
+    tc.innerHTML += `<div class="tension-card intensity-${ten.intensity}"><div class="tension-header"><div class="tension-axis">${esc(ten.axis)}</div><div class="tension-badges"><span class="badge badge-${ten.intensity.toUpperCase()}">${ten.intensity}</span>${bb}</div></div><div class="tension-compare"><div class="tension-side current"><div class="tension-side-tag">${t('current')}</div>${esc(ten.current)}</div><div class="tension-side opportunity"><div class="tension-side-tag">${t('opportunity')}</div>${esc(ten.opportunity)}</div></div><div class="tension-interpretation">${esc(ten.interpretation)}</div></div>`;
+  });
+
+  // Optionality Map
+  const opt = card.optionality_map;
+  let oh = `<div class="opt-grid"><div class="opt-box"><h4>${t('doorsCurrentLabel')}</h4><ul>${(opt.doors_opened_current||[]).map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div><div class="opt-box"><h4>${t('doorsOppLabel')}</h4><ul>${(opt.doors_opened_opportunity||[]).map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div></div>`;
+  if (opt.doors_closed && opt.doors_closed.length) oh += `<div class="opt-box doors-closed" style="margin-bottom:14px"><h4 style="color:var(--high)">${t('doorsClosedLabel')}</h4><ul>${opt.doors_closed.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div>`;
+  oh += `<div class="opt-meta"><div class="opt-meta-item"><div class="meta-label">${t('reversibilityLabel')}</div><div class="meta-value">${esc(opt.reversibility_risk)}</div></div><div class="opt-meta-item"><div class="meta-label">${t('switchingCostLabel')}</div><div class="meta-value"><span class="badge badge-${opt.switching_cost}">${opt.switching_cost}</span></div></div></div>`;
+  document.getElementById('optContainer').innerHTML = oh;
+
+  // Scenarios
+  function renderScenarios(containerId, scenarios) {
+    const el = document.getElementById(containerId); el.innerHTML = '';
+    (scenarios||[]).forEach(s => { el.innerHTML += `<div class="scenario-card"><div class="scenario-head"><span class="scenario-name">${esc(s.name)}</span><span class="mini-badge ${s.likelihood}">${s.likelihood}</span></div><div class="scenario-desc">${esc(s.description)}</div></div>`; });
+  }
+  renderScenarios('currentScenarios', card.current_scenarios);
+  renderScenarios('oppScenarios', card.opportunity_scenarios);
+
+  // Uncertainty
+  const uc = document.getElementById('uncertaintyContainer'); uc.innerHTML = '';
+  (card.uncertainty_block||[]).forEach(item => { uc.innerHTML += `<div class="uncertainty-item"><div class="uncertainty-text">${esc(item.unknown)}</div><span class="badge badge-${item.impact}">${item.impact}</span></div>`; });
+  const qc = document.getElementById('questionsContainer'); qc.innerHTML = '';
+  (card.decision_sensitive_questions||[]).forEach(q => { qc.innerHTML += `<div class="question-row"><div class="question-text">${esc(q.question)}</div><div class="question-impact"><span class="mini-badge ${q.impact}">${q.impact}</span></div></div>`; });
+
+  // Decision Framing
+  const fg = document.getElementById('framingGrid'); fg.innerHTML = '';
+  [{key:'A',data:card.decision_framing.A,label:t('stayLabel')},{key:'B',data:card.decision_framing.B,label:t('switchLabel')},{key:'C',data:card.decision_framing.C,label:t('waitLabel')}].forEach(f => {
+    fg.innerHTML += `<div class="framing-card"><div class="framing-letter">${f.key}</div><div class="framing-label">${esc(f.label)}</div><div class="framing-meaning">${esc(f.data.meaning)}</div></div>`;
+  });
+
+  // Share Decision Card
+  const cTitle = document.getElementById('currentTitle').value.trim() || card.job_panels.current.title;
+  const oTitle = document.getElementById('oppTitle').value.trim() || card.job_panels.opportunity.title;
+  document.getElementById('decisionCard').innerHTML = `<div class="brand">NEXTMOVE</div><h3>${esc(cTitle)} vs ${esc(oTitle)}</h3><div class="decision-card-cols"><div><div class="sub-label">${t('current')} — ${t('pros')}</div><ul class="pros">${(card.current_pros||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ul><div class="sub-label">${t('current')} — ${t('cons')}</div><ul class="cons">${(card.current_cons||[]).map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div><div><div class="sub-label">${t('opportunity')} — ${t('pros')}</div><ul class="pros">${(card.opportunity_pros||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ul><div class="sub-label">${t('opportunity')} — ${t('cons')}</div><ul class="cons">${(card.opportunity_cons||[]).map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div></div><div class="discuss">&ldquo;${t('discuss')}&rdquo;</div>`;
+}
+
+// =====================================================================
+// SHARE
+// =====================================================================
+const shareBtn = document.getElementById('shareBtn'), shareMenu = document.getElementById('shareMenu');
+shareBtn.addEventListener('click', () => { shareMenu.style.display = shareMenu.style.display === 'block' ? 'none' : 'block'; });
+shareMenu.addEventListener('click', async (e) => {
+  const action = e.target.dataset.action; if (!action || !lastCard) return;
+  const status = document.getElementById('shareStatus');
+  try {
+    const res = await fetch('/share', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ current_job_title: document.getElementById('currentTitle').value.trim() || lastCard.job_panels.current.title, opportunity_title: document.getElementById('oppTitle').value.trim() || lastCard.job_panels.opportunity.title, result: lastCard }) });
+    if (!res.ok) throw new Error('Share failed');
+    const data = await res.json();
+    const url = window.location.origin + data.url;
+    if (action === 'copy') { await navigator.clipboard.writeText(url); status.textContent = t('copied'); }
+    else if (action === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, '_blank');
+    else if (action === 'linkedin') window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+  } catch (err) { status.textContent = err.message; }
+  shareMenu.style.display = 'none';
+});
+
+document.getElementById('exportPdfBtn').addEventListener('click', () => { window.print(); });
+
+function restart() {
+  qIndex = 0; qAnswers = {}; profileVector = {}; lastCard = null;
+  ['currentTitle','currentDesc','currentLikes','currentDislikes','oppTitle','oppDesc','clarificationsInput'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('errorBanner').style.display = 'none';
+  document.getElementById('toStep2').disabled = true;
+  document.getElementById('analyzeBtn').disabled = true;
+  goStep(0);
+  renderQuestion();
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+(function initFromQuiz() {
+  const params = new URLSearchParams(window.location.search);
+  const profileParam = params.get('profile');
+  if (profileParam) {
+    try {
+      profileVector = JSON.parse(profileParam);
+      applyLabels();
+      goStep(1);
+      return;
+    } catch(e) {}
+  }
+  loadQuestionnaire();
+})();
+</script>
+</body>
+</html>
