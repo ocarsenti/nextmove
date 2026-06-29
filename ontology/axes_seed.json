@@ -1,0 +1,525 @@
+{
+  "version": 1,
+  "axes": [
+    {
+      "id": "autonomy",
+      "label": "Autonomie",
+      "description": "Capacité et besoin d'agir sans structure externe ni validation fréquente. Dépend fortement du contexte organisationnel.",
+      "layer": 1,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [
+        {"into": ["autonomy_strategic", "autonomy_operational"], "signal": "high_variance_in_responses"}
+      ],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "autonomy_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.4},
+          "explanation": "En startup, l'autonomie est une compétence critique — les rôles sont peu définis et l'initiative est centrale.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "autonomy_public_sector_reduce",
+          "condition": {"signal": "context_match", "context": "public_sector"},
+          "effect": {"action": "reweight", "weight_modifier": -0.3},
+          "explanation": "Dans le secteur public, les processus formels réduisent l'importance de l'autonomie individuelle.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "autonomy_clinical_reduce",
+          "condition": {"signal": "context_match", "context": "clinical_team"},
+          "effect": {"action": "reweight", "weight_modifier": -0.2},
+          "explanation": "En équipe clinique, les protocoles et la coordination réduisent les marges d'autonomie individuelle.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "direction",
+      "label": "Direction",
+      "description": "Tendance à initier une direction vs à s'aligner sur une direction externe. Indépendant du leadership formel.",
+      "layer": 1,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [
+        {"into": ["direction_initiation", "direction_followership"], "signal": "high_variance_in_responses"}
+      ],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "direction_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "En startup, la capacité à définir une direction sans guidage hiérarchique est déterminante.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "direction_consulting_boost",
+          "condition": {"signal": "context_match", "context": "consulting"},
+          "effect": {"action": "reweight", "weight_modifier": 0.2},
+          "explanation": "En consulting, structurer et piloter des missions avec peu de guidage client est essentiel.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "behavioral_stability",
+      "label": "Stabilité comportementale",
+      "description": "Cohérence des comportements et réponses dans le temps et selon les contextes. Différent de la rigidité.",
+      "layer": 1,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": ["persistence"],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "cognitive_flexibility",
+      "label": "Flexibilité cognitive",
+      "description": "Capacité à changer de cadre mental, de stratégie ou de perspective selon l'information disponible.",
+      "layer": 1,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "flexibility_research_boost",
+          "condition": {"signal": "context_match", "context": "research"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "En recherche, la révision des hypothèses est un comportement attendu et valorisé.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "social_interaction",
+      "label": "Interaction sociale",
+      "description": "Poids et rôle du collectif dans la prise de décision et la production de résultats.",
+      "layer": 2,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [
+        {"into": ["collaboration", "communication"], "signal": "high_variance_in_responses"}
+      ],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "social_clinical_boost",
+          "condition": {"signal": "context_match", "context": "clinical_team"},
+          "effect": {"action": "reweight", "weight_modifier": 0.4},
+          "explanation": "En équipe clinique, la coordination interpersonnelle est un facteur de sécurité et de qualité.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "social_research_reduce",
+          "condition": {"signal": "context_match", "context": "research"},
+          "effect": {"action": "reweight", "weight_modifier": -0.2},
+          "explanation": "En recherche fondamentale, le travail individuel approfondi prime souvent sur la coordination sociale.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "influence",
+      "label": "Influence",
+      "description": "Capacité à impacter les décisions, comportements ou priorités des autres, indépendamment de l'autorité formelle.",
+      "layer": 2,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "influence_corporate_boost",
+          "condition": {"signal": "context_match", "context": "corporate"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "Dans les grandes organisations, naviguer les dynamiques de pouvoir est une compétence différenciante.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "influence_consulting_boost",
+          "condition": {"signal": "context_match", "context": "consulting"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "En consulting, convaincre des clients seniors sans autorité hiérarchique est un critère clé.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "situational_leadership",
+      "label": "Leadership situationnel",
+      "description": "Capacité à prendre le lead selon le contexte, sans nécessiter un rôle formel de leader.",
+      "layer": 2,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": ["direction"],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "leadership_corporate_boost",
+          "condition": {"signal": "context_match", "context": "corporate"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "En grande organisation, le leadership informel est un signal de progression.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "leadership_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.2},
+          "explanation": "En startup, les rôles de leadership émergent plus vite et de façon plus fluide.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "rigor",
+      "label": "Rigueur / Précision",
+      "description": "Niveau d'exigence sur l'exactitude, la vérification et la formalisation du travail produit.",
+      "layer": 3,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": ["cognitive_structuring"],
+      "potential_splits": [
+        {"into": ["rigor_precision", "rigor_formalization"], "signal": "high_variance_in_responses"}
+      ],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "rigor_research_boost",
+          "condition": {"signal": "context_match", "context": "research"},
+          "effect": {"action": "reweight", "weight_modifier": 0.4},
+          "explanation": "En recherche, la rigueur méthodologique est un critère de validité scientifique.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "rigor_consulting_boost",
+          "condition": {"signal": "context_match", "context": "consulting"},
+          "effect": {"action": "reweight", "weight_modifier": 0.2},
+          "explanation": "Les livrables consulting exigent une formalisation rigoureuse pour emporter l'adhésion client.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "rigor_startup_reduce",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": -0.2},
+          "explanation": "En startup, la vitesse prime sur la rigueur formelle — les MVP acceptent l'imperfection.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "cognitive_structuring",
+      "label": "Structuration cognitive",
+      "description": "Besoin de cadres, plans et structures explicites pour fonctionner efficacement.",
+      "layer": 3,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": ["rigor"],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "cognitive_granularity",
+      "label": "Granularité cognitive",
+      "description": "Niveau naturel de découpage des concepts : global (macro), intermédiaire ou très fin (micro). Détermine la résolution d'analyse naturelle.",
+      "layer": 3,
+      "is_meta": true,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "ambiguity_tolerance",
+      "label": "Tolérance à l'ambiguïté",
+      "description": "Capacité à agir, décider et produire en l'absence d'information complète ou de cadre clair.",
+      "layer": 3,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "ambiguity_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.4},
+          "explanation": "En startup, la tolérance à l'ambiguïté est un critère de survie : les rôles, les marchés et les produits sont en constante redéfinition.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "ambiguity_public_reduce",
+          "condition": {"signal": "context_match", "context": "public_sector"},
+          "effect": {"action": "reweight", "weight_modifier": -0.3},
+          "explanation": "Dans le secteur public, les cadres réglementaires réduisent l'exposition à l'ambiguïté.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "context_sensitivity",
+      "label": "Sensibilité au contexte",
+      "description": "Degré auquel les comportements et préférences changent selon l'environnement. Axe modulateur global.",
+      "layer": 4,
+      "is_meta": true,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "exploration",
+      "label": "Exploration",
+      "description": "Tendance à chercher du nouveau, des territoires inconnus, au détriment de l'exploitation de l'existant.",
+      "layer": 4,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": ["risk_appetite"],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "exploration_research_boost",
+          "condition": {"signal": "context_match", "context": "research"},
+          "effect": {"action": "reweight", "weight_modifier": 0.4},
+          "explanation": "En recherche, l'exploration de nouveaux territoires est l'activité principale.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "exploration_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.2},
+          "explanation": "Les startups valorisent l'exploration de marchés et d'usages non couverts.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "exploration_public_reduce",
+          "condition": {"signal": "context_match", "context": "public_sector"},
+          "effect": {"action": "reweight", "weight_modifier": -0.3},
+          "explanation": "Le secteur public valorise l'optimisation de l'existant plus que l'exploration.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "resilience",
+      "label": "Résilience",
+      "description": "Stabilité psychologique et comportementale face aux échecs, frictions et contraintes répétées.",
+      "layer": 4,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "resilience_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "En startup, les échecs répétés sont structurels — la résilience est un facteur de survie.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "decision_speed",
+      "label": "Vitesse de décision",
+      "description": "Rapidité du passage de l'intention à l'action. Indépendant de l'impulsivité — inclut la capacité à décider avec peu d'information.",
+      "layer": 4,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "speed_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "En startup, la capacité à décider vite est un avantage compétitif direct.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "speed_public_reduce",
+          "condition": {"signal": "context_match", "context": "public_sector"},
+          "effect": {"action": "reweight", "weight_modifier": -0.3},
+          "explanation": "Le secteur public valorise la consultation et le consensus sur la vitesse individuelle.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "risk_appetite",
+      "label": "Appétence au risque",
+      "description": "Tolérance aux décisions à fort impact et faible réversibilité, dans un contexte d'incertitude.",
+      "layer": 4,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": ["exploration"],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "risk_startup_boost",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": 0.4},
+          "explanation": "En startup, l'appétence au risque détermine la capacité à saisir des opportunités asymétriques.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "risk_public_reduce",
+          "condition": {"signal": "context_match", "context": "public_sector"},
+          "effect": {"action": "reweight", "weight_modifier": -0.4},
+          "explanation": "Le secteur public exige une aversion au risque marquée — les erreurs ont des conséquences publiques.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "risk_clinical_reduce",
+          "condition": {"signal": "context_match", "context": "clinical_team"},
+          "effect": {"action": "reweight", "weight_modifier": -0.4},
+          "explanation": "En clinique, la tolérance au risque individuel est un risque pour la sécurité patient.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "persistence",
+      "label": "Persistance",
+      "description": "Capacité à maintenir une direction malgré les frictions, les obstacles et les signaux décourageants.",
+      "layer": 4,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": ["behavioral_stability"],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "persistence_research_boost",
+          "condition": {"signal": "context_match", "context": "research"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "En recherche, les cycles longs requièrent une persistance sur des objectifs distants.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    },
+    {
+      "id": "value_orientation",
+      "label": "Orientation valeur / sens",
+      "description": "Importance du 'pourquoi' dans la motivation. Besoin de sens et d'alignement entre activité et valeurs personnelles.",
+      "layer": 4,
+      "is_meta": false,
+      "parents": [],
+      "children": [],
+      "potential_merges": [],
+      "potential_splits": [],
+      "weight": 1.0,
+      "status": "active",
+      "version": 1,
+      "rules": [
+        {
+          "rule_id": "value_public_boost",
+          "condition": {"signal": "context_match", "context": "public_sector"},
+          "effect": {"action": "reweight", "weight_modifier": 0.3},
+          "explanation": "Le secteur public attire souvent des individus fortement motivés par l'impact social.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "value_research_boost",
+          "condition": {"signal": "context_match", "context": "research"},
+          "effect": {"action": "reweight", "weight_modifier": 0.2},
+          "explanation": "La recherche demande un sens fort pour traverser les cycles longs sans gratification immédiate.",
+          "requires_data": false
+        },
+        {
+          "rule_id": "value_startup_reduce",
+          "condition": {"signal": "context_match", "context": "startup"},
+          "effect": {"action": "reweight", "weight_modifier": -0.1},
+          "explanation": "En early-stage startup, la pragmatique de survie peut temporairement primer sur le sens.",
+          "requires_data": false
+        }
+      ],
+      "uncertainty_model": {"type": "heuristic", "confidence": 0.0, "min_questions": 3}
+    }
+  ]
+}

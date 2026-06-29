@@ -1,0 +1,725 @@
+{
+  "version": 1,
+  "questions": [
+
+    {"id": "q_autonomy_1", "axis_id": "autonomy", "difficulty": 0.3, "discriminability": 0.6,
+     "text": "Dans ton travail idéal, tu as besoin que ta mission soit :",
+     "options": [
+       {"label": "Très clairement définie avec des objectifs précis et des jalons réguliers", "value": "A", "score": 0.0},
+       {"label": "Définie dans ses grandes lignes, avec de la latitude sur l'exécution", "value": "B", "score": 0.5},
+       {"label": "Formulée comme un problème à résoudre, sans contrainte sur la méthode", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_autonomy_2", "axis_id": "autonomy", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Tu travailles sur un projet complexe. Ton manager est peu disponible. Tu :",
+     "options": [
+       {"label": "Attends un point de synchronisation pour prendre les décisions importantes", "value": "A", "score": 0.0},
+       {"label": "Avances sur ce que tu peux et mets le reste en attente explicite", "value": "B", "score": 0.5},
+       {"label": "Décides et avances — tu ajustes si c'était le mauvais choix", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_autonomy_adapt_1"]},
+
+    {"id": "q_autonomy_3", "axis_id": "autonomy", "difficulty": 0.7, "discriminability": 0.8,
+     "text": "Face à un désaccord avec ton management sur une décision stratégique, tu :",
+     "options": [
+       {"label": "Appliques la décision — c'est leur rôle de décider", "value": "A", "score": 0.0},
+       {"label": "Exprimes ton point de vue clairement puis tu t'alignes", "value": "B", "score": 0.5},
+       {"label": "Tiens ta position et cherches à les convaincre, quitte à escalader", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_autonomy_adapt_1", "axis_id": "autonomy", "difficulty": 0.8, "discriminability": 0.9,
+     "text": "Dans quelle mesure le fait de ne pas avoir de validation externe te crée de l'inconfort ?",
+     "options": [
+       {"label": "Beaucoup — j'ai besoin de savoir que je suis dans la bonne direction", "value": "A", "score": 0.0},
+       {"label": "Parfois — selon l'enjeu de la décision", "value": "B", "score": 0.5},
+       {"label": "Peu ou pas — je me fais confiance pour corriger si nécessaire", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "autonomy", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_autonomy_adapt_2", "axis_id": "autonomy", "difficulty": 0.6, "discriminability": 0.75,
+     "text": "Tu préfères travailler dans un environnement où :",
+     "options": [
+       {"label": "Les rôles sont clairs, les processus documentés, les attentes explicites", "value": "A", "score": 0.0},
+       {"label": "Il y a un cadre général mais de la flexibilité dans l'exécution", "value": "B", "score": 0.5},
+       {"label": "Tout est à construire — tu définis toi-même les règles du jeu", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "autonomy", "condition": "high_value", "threshold": 0.7}, "activates": []},
+
+    {"id": "q_direction_1", "axis_id": "direction", "difficulty": 0.3, "discriminability": 0.6,
+     "text": "Dans un groupe sans leader désigné, tu as tendance à :",
+     "options": [
+       {"label": "Attendre que quelqu'un prenne les rênes", "value": "A", "score": 0.0},
+       {"label": "Proposer une organisation si personne ne le fait", "value": "B", "score": 0.5},
+       {"label": "Naturellement structurer le groupe et donner une direction", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_direction_2", "axis_id": "direction", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Tu es plus à l'aise quand :",
+     "options": [
+       {"label": "Une vision claire t'est donnée et tu contribues à la réaliser", "value": "A", "score": 0.0},
+       {"label": "Tu co-construis la direction avec d'autres", "value": "B", "score": 0.5},
+       {"label": "Tu es à l'origine de la direction et tu la défends", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_direction_3", "axis_id": "direction", "difficulty": 0.7, "discriminability": 0.75,
+     "text": "Face à un projet sans cap clair, ta réaction naturelle est :",
+     "options": [
+       {"label": "Inconfortable — j'ai besoin d'un objectif défini pour être efficace", "value": "A", "score": 0.0},
+       {"label": "Mitigée — je peux avancer mais j'ai besoin de clarifier rapidement", "value": "B", "score": 0.5},
+       {"label": "Stimulante — définir la direction est la partie la plus intéressante", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_direction_adapt_1", "axis_id": "direction", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "Tu as la possibilité de choisir : rejoindre un projet déjà bien cadré, ou construire quelque chose from scratch. Tu choisis :",
+     "options": [
+       {"label": "Le projet cadré — je préfère exécuter avec excellence", "value": "A", "score": 0.0},
+       {"label": "Ça dépend du sujet et de l'équipe", "value": "B", "score": 0.5},
+       {"label": "From scratch — la phase de construction est ce qui m'attire", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "direction", "condition": "high_value", "threshold": 0.6}, "activates": []},
+
+    {"id": "q_direction_adapt_2", "axis_id": "direction", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Quand tu proposes une idée qui est rejetée, tu :",
+     "options": [
+       {"label": "L'abandonnes et passes à autre chose", "value": "A", "score": 0.0},
+       {"label": "Essaies de comprendre le rejet et ajustes l'idée", "value": "B", "score": 0.5},
+       {"label": "Cherches une autre voie pour la défendre ou la tester quand même", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "direction", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_behavioral_stability_1", "axis_id": "behavioral_stability", "difficulty": 0.3, "discriminability": 0.6,
+     "text": "Tes proches te décriraient comme quelqu'un :",
+     "options": [
+       {"label": "Très différent selon le contexte et les personnes", "value": "A", "score": 0.0},
+       {"label": "Globalement cohérent avec quelques variations selon le contexte", "value": "B", "score": 0.5},
+       {"label": "Identique dans presque tous les contextes", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_behavioral_stability_2", "axis_id": "behavioral_stability", "difficulty": 0.5, "discriminability": 0.65,
+     "text": "Face à une situation de stress intense, ton comportement :",
+     "options": [
+       {"label": "Change significativement — je réagis différemment sous pression", "value": "A", "score": 0.0},
+       {"label": "Évolue légèrement — je reste moi-même mais adapte certains comportements", "value": "B", "score": 0.5},
+       {"label": "Reste stable — mes fondamentaux ne bougent pas sous pression", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_behavioral_stability_3", "axis_id": "behavioral_stability", "difficulty": 0.7, "discriminability": 0.75,
+     "text": "Dans ta vie professionnelle, tes priorités et valeurs ont :",
+     "options": [
+       {"label": "Beaucoup changé d'une période à l'autre", "value": "A", "score": 0.0},
+       {"label": "Évolué progressivement mais avec une continuité", "value": "B", "score": 0.5},
+       {"label": "Été relativement stables malgré les changements de contexte", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_behavioral_stability_adapt_1"]},
+
+    {"id": "q_behavioral_stability_adapt_1", "axis_id": "behavioral_stability", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Ces changements de priorités ont-ils été subis ou choisis ?",
+     "options": [
+       {"label": "Surtout subis — les circonstances m'ont conduit à évoluer", "value": "A", "score": 0.0},
+       {"label": "Un mélange — certains choisis, d'autres imposés", "value": "B", "score": 0.5},
+       {"label": "Surtout choisis — j'ai délibérément réorienté mes priorités", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "behavioral_stability", "condition": "low_value", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_behavioral_stability_adapt_2", "axis_id": "behavioral_stability", "difficulty": 0.6, "discriminability": 0.7,
+     "text": "Comment réagis-tu quand ton environnement change brutalement ?",
+     "options": [
+       {"label": "Je dois reconstruire mes repères — c'est déstabilisant", "value": "A", "score": 0.0},
+       {"label": "Je m'adapte progressivement, ça prend du temps", "value": "B", "score": 0.5},
+       {"label": "Je reste ancré dans mes comportements fondamentaux, le contexte importe peu", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "behavioral_stability", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_cognitive_flexibility_1", "axis_id": "cognitive_flexibility", "difficulty": 0.4, "discriminability": 0.65,
+     "text": "Quand tu réalises qu'une approche ne fonctionne pas, tu :",
+     "options": [
+       {"label": "Optimises l'approche existante — changer de stratégie m'est difficile", "value": "A", "score": 0.0},
+       {"label": "Adaptes progressivement en gardant ce qui fonctionne", "value": "B", "score": 0.5},
+       {"label": "Abandonnes l'approche et recommences depuis une perspective différente", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_cognitive_flexibility_2", "axis_id": "cognitive_flexibility", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Face à un problème, tu as tendance à :",
+     "options": [
+       {"label": "Chercher une solution dans tes frameworks et méthodes habituels", "value": "A", "score": 0.0},
+       {"label": "Alterner entre tes méthodes habituelles et de nouvelles approches", "value": "B", "score": 0.5},
+       {"label": "Aborder chaque problème comme unique et chercher le cadre qui lui correspond", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_cognitive_flexibility_3", "axis_id": "cognitive_flexibility", "difficulty": 0.7, "discriminability": 0.8,
+     "text": "Quelqu'un te présente une vision du monde radicalement différente de la tienne. Tu :",
+     "options": [
+       {"label": "L'écoutes avec intérêt mais restes fondamentalement sur ta position", "value": "A", "score": 0.0},
+       {"label": "Intègres certains éléments qui t'interpellent dans ta propre vision", "value": "B", "score": 0.5},
+       {"label": "Peux basculer dans leur cadre pour explorer — tu remets les tiens en question facilement", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_cognitive_flexibility_adapt_1"]},
+
+    {"id": "q_cognitive_flexibility_adapt_1", "axis_id": "cognitive_flexibility", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "Ce changement de cadre te génère-t-il de l'énergie ou de la fatigue ?",
+     "options": [
+       {"label": "De la fatigue — c'est coûteux cognitivement de sortir de mes représentations", "value": "A", "score": 0.0},
+       {"label": "Ni l'un ni l'autre — c'est neutre", "value": "B", "score": 0.5},
+       {"label": "De l'énergie — changer de perspective me stimule", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "cognitive_flexibility", "condition": "high_value", "threshold": 0.6}, "activates": []},
+
+    {"id": "q_cognitive_flexibility_adapt_2", "axis_id": "cognitive_flexibility", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Tu changes de rôle ou de secteur. Tu :",
+     "options": [
+       {"label": "Appliques les méthodes qui ont marché dans ton expérience précédente", "value": "A", "score": 0.0},
+       {"label": "Adaptes tes méthodes au nouveau contexte progressivement", "value": "B", "score": 0.5},
+       {"label": "Questionnes d'abord tout ce que tu savais — le nouveau contexte demande un nouveau cadre", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "cognitive_flexibility", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_social_interaction_1", "axis_id": "social_interaction", "difficulty": 0.3, "discriminability": 0.65,
+     "text": "Tu es le plus productif quand tu travailles :",
+     "options": [
+       {"label": "Seul — les interactions fragmentent ma concentration", "value": "A", "score": 0.0},
+       {"label": "Avec quelques personnes clés à des moments dédiés", "value": "B", "score": 0.5},
+       {"label": "En équipe — l'interaction collective est ce qui me donne de l'énergie", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_social_interaction_2", "axis_id": "social_interaction", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "La qualité de tes décisions professionnelles :",
+     "options": [
+       {"label": "Est meilleure quand je travaille seul — les autres introduisent du bruit", "value": "A", "score": 0.0},
+       {"label": "Bénéficie d'échanges ciblés avec quelques interlocuteurs clés", "value": "B", "score": 0.5},
+       {"label": "Dépend fondamentalement de la richesse des échanges collectifs", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_social_interaction_3", "axis_id": "social_interaction", "difficulty": 0.6, "discriminability": 0.75,
+     "text": "Dans ta journée de travail idéale, les interactions avec d'autres représentent :",
+     "options": [
+       {"label": "Moins de 20% du temps — j'ai besoin d'espaces longs sans interruption", "value": "A", "score": 0.0},
+       {"label": "Entre 20% et 50% — un équilibre entre solitude et collaboration", "value": "B", "score": 0.5},
+       {"label": "Plus de 50% — les échanges sont le cœur de ma valeur ajoutée", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_social_interaction_adapt_1"]},
+
+    {"id": "q_social_interaction_adapt_1", "axis_id": "social_interaction", "difficulty": 0.7, "discriminability": 0.8,
+     "text": "La prise de décision collective te génère-t-elle de la satisfaction ou de la frustration ?",
+     "options": [
+       {"label": "De la frustration — elle ralentit et dilue la qualité des décisions", "value": "A", "score": 0.0},
+       {"label": "Les deux selon le contexte", "value": "B", "score": 0.5},
+       {"label": "De la satisfaction — les décisions collectives sont plus robustes", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "social_interaction", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_social_interaction_adapt_2", "axis_id": "social_interaction", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Quand tu dois travailler intensément pendant 2 semaines, tu préfères :",
+     "options": [
+       {"label": "Isolement total — je donne mon meilleur sans interaction", "value": "A", "score": 0.0},
+       {"label": "Points réguliers mais travail individuel entre les deux", "value": "B", "score": 0.5},
+       {"label": "Équipe resserrée en mode commando — l'intensité collective me dope", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "social_interaction", "condition": "high_value", "threshold": 0.7}, "activates": []},
+
+    {"id": "q_influence_1", "axis_id": "influence", "difficulty": 0.4, "discriminability": 0.65,
+     "text": "Tu réussis à faire avancer une idée dans ton organisation en :",
+     "options": [
+       {"label": "Produisant un travail irréprochable qui parle de lui-même", "value": "A", "score": 0.0},
+       {"label": "Présentant l'idée de façon convaincante aux bonnes personnes", "value": "B", "score": 0.5},
+       {"label": "Construisant une coalition et créant les conditions pour que l'idée s'impose", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_influence_2", "axis_id": "influence", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Dans une réunion où tu n'es pas le décideur, tu as tendance à :",
+     "options": [
+       {"label": "Écouter et apporter ta contribution technique quand on te la demande", "value": "A", "score": 0.0},
+       {"label": "Exprimer ton point de vue clairement et peser dans le débat", "value": "B", "score": 0.5},
+       {"label": "Structurer les débats et orienter les conclusions même sans mandat formel", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_influence_3", "axis_id": "influence", "difficulty": 0.7, "discriminability": 0.8,
+     "text": "L'impact que tu recherches dans ton travail est :",
+     "options": [
+       {"label": "Contribuer à un résultat collectif — ton rôle est une pièce du puzzle", "value": "A", "score": 0.0},
+       {"label": "Faire avancer des sujets précis où tu as une expertise ou une vision", "value": "B", "score": 0.5},
+       {"label": "Transformer la façon dont les gens pensent ou décident autour de toi", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_influence_adapt_1"]},
+
+    {"id": "q_influence_adapt_1", "axis_id": "influence", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "Quand une décision importante se prend sans toi, tu ressens :",
+     "options": [
+       {"label": "Rien de particulier — ce n'est pas mon rôle d'être dans toutes les décisions", "value": "A", "score": 0.0},
+       {"label": "Une légère frustration si j'aurais pu apporter quelque chose", "value": "B", "score": 0.5},
+       {"label": "Une frustration marquée — j'ai besoin d'être dans les cercles de décision qui comptent", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "influence", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_influence_adapt_2", "axis_id": "influence", "difficulty": 0.7, "discriminability": 0.75,
+     "text": "Face à quelqu'un qui résiste à une idée que tu portes, tu :",
+     "options": [
+       {"label": "Exposes les arguments et laisses la personne décider seule", "value": "A", "score": 0.0},
+       {"label": "Essaies de comprendre sa résistance et ajustes ton approche", "value": "B", "score": 0.5},
+       {"label": "Trouves le levier — la bonne histoire, la bonne timing, la bonne personne relai", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "influence", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_situational_leadership_1", "axis_id": "situational_leadership", "difficulty": 0.4, "discriminability": 0.65,
+     "text": "Quand ton équipe est bloquée sur une décision, tu :",
+     "options": [
+       {"label": "Attends que le responsable tranche", "value": "A", "score": 0.0},
+       {"label": "Proposes une option si on te le demande", "value": "B", "score": 0.5},
+       {"label": "Prends l'initiative de proposer une direction et mobilises l'équipe", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_situational_leadership_2", "axis_id": "situational_leadership", "difficulty": 0.55, "discriminability": 0.7,
+     "text": "Tu prends naturellement le lead dans une situation quand :",
+     "options": [
+       {"label": "C'est ton rôle formel défini", "value": "A", "score": 0.0},
+       {"label": "Tu as une expertise particulière sur le sujet", "value": "B", "score": 0.5},
+       {"label": "Personne d'autre ne le fait et que tu perçois une opportunité de valeur", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_situational_leadership_3", "axis_id": "situational_leadership", "difficulty": 0.7, "discriminability": 0.75,
+     "text": "Coordonner des personnes qui ne te reportent pas formellement est :",
+     "options": [
+       {"label": "Inconfortable — j'ai besoin d'une autorité claire pour piloter", "value": "A", "score": 0.0},
+       {"label": "Possible si le contexte et les enjeux le justifient", "value": "B", "score": 0.5},
+       {"label": "Naturel — l'autorité informelle est souvent plus efficace que le titre", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_situational_leadership_adapt_1"]},
+
+    {"id": "q_situational_leadership_adapt_1", "axis_id": "situational_leadership", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "Quand tu coordonnes sans autorité formelle, tu t'appuies sur :",
+     "options": [
+       {"label": "Je préfère avoir une autorité formelle pour éviter cette situation", "value": "A", "score": 0.0},
+       {"label": "Mon expertise et mes arguments", "value": "B", "score": 0.5},
+       {"label": "La confiance construite, la vision partagée et la dynamique de groupe", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "situational_leadership", "condition": "high_value", "threshold": 0.6}, "activates": []},
+
+    {"id": "q_situational_leadership_adapt_2", "axis_id": "situational_leadership", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Quand tu diriges un groupe, ce qui te crée le plus de satisfaction est :",
+     "options": [
+       {"label": "Atteindre l'objectif — le résultat prime sur le processus de leadership", "value": "A", "score": 0.0},
+       {"label": "Avoir su doser direction et autonomie selon les personnes", "value": "B", "score": 0.5},
+       {"label": "Voir le groupe dépasser ce qu'il pensait possible grâce à ta façon de le mobiliser", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "situational_leadership", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_rigor_1", "axis_id": "rigor", "difficulty": 0.3, "discriminability": 0.6,
+     "text": "Dans ton travail, tu considères qu'un livrable est 'assez bon' quand :",
+     "options": [
+       {"label": "Il répond au besoin exprimé — l'essentiel est la fonctionnalité", "value": "A", "score": 0.0},
+       {"label": "Il est fiable et de bonne qualité, sans être parfait", "value": "B", "score": 0.5},
+       {"label": "Il est irréprochable sur les dimensions qui comptent vraiment", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_rigor_2", "axis_id": "rigor", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Quand tu prends une décision importante, tu as tendance à :",
+     "options": [
+       {"label": "Décider rapidement avec les informations disponibles", "value": "A", "score": 0.0},
+       {"label": "Collecter les informations clés et décider quand tu as 70-80% de certitude", "value": "B", "score": 0.5},
+       {"label": "Chercher à réduire l'incertitude au maximum avant de te prononcer", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_rigor_3", "axis_id": "rigor", "difficulty": 0.65, "discriminability": 0.75,
+     "text": "Quand tu détectes une erreur dans un travail déjà livré, tu :",
+     "options": [
+       {"label": "L'intègres pour la prochaine fois — ce qui est fait est fait", "value": "A", "score": 0.0},
+       {"label": "La corriges si l'impact est significatif", "value": "B", "score": 0.5},
+       {"label": "La signales et corriges — l'exactitude du travail produit est non-négociable", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_rigor_adapt_1"]},
+
+    {"id": "q_rigor_adapt_1", "axis_id": "rigor", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Le perfectionnisme est-il pour toi une force ou un obstacle ?",
+     "options": [
+       {"label": "Un obstacle — il me ralentit et m'empêche de livrer à temps", "value": "A", "score": 0.0},
+       {"label": "Les deux selon le contexte et l'enjeu", "value": "B", "score": 0.5},
+       {"label": "Une force — la qualité du travail est ce qui me distingue", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "rigor", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_rigor_adapt_2", "axis_id": "rigor", "difficulty": 0.6, "discriminability": 0.7,
+     "text": "Tu dois sortir un produit en 2 semaines avec des ressources limitées. Tu priorises :",
+     "options": [
+       {"label": "La vitesse — un MVP imparfait vaut mieux qu'un produit parfait livré trop tard", "value": "A", "score": 0.0},
+       {"label": "Un compromis raisonné entre qualité et délai", "value": "B", "score": 0.5},
+       {"label": "La qualité — je préfère négocier le délai plutôt que de livrer quelque chose de médiocre", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "rigor", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_cognitive_structuring_1", "axis_id": "cognitive_structuring", "difficulty": 0.35, "discriminability": 0.6,
+     "text": "Quand tu démarres un nouveau projet, tu as tendance à :",
+     "options": [
+       {"label": "Plonger directement — la structure émerge de l'action", "value": "A", "score": 0.0},
+       {"label": "Poser un cadre minimal avant de commencer", "value": "B", "score": 0.5},
+       {"label": "Définir une architecture complète du projet avant toute exécution", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_cognitive_structuring_2", "axis_id": "cognitive_structuring", "difficulty": 0.5, "discriminability": 0.65,
+     "text": "Pour prendre des notes et organiser tes idées, tu utilises :",
+     "options": [
+       {"label": "Des notes informelles — la structure m'encombre plus qu'elle ne m'aide", "value": "A", "score": 0.0},
+       {"label": "Un système semi-organisé que tu adaptes selon les besoins", "value": "B", "score": 0.5},
+       {"label": "Un système organisé et cohérent — la structure est une condition de clarté mentale", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_cognitive_structuring_3", "axis_id": "cognitive_structuring", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Travailler dans un environnement peu structuré et peu formalisé te :",
+     "options": [
+       {"label": "Convient très bien — tu crées ta propre structure ou fonctionnes sans", "value": "A", "score": 0.0},
+       {"label": "Convient si tu peux apporter une structure minimale à ton périmètre", "value": "B", "score": 0.5},
+       {"label": "Pose problème — tu as besoin d'un environnement structuré pour être efficace", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_cognitive_structuring_adapt_1"]},
+
+    {"id": "q_cognitive_structuring_adapt_1", "axis_id": "cognitive_structuring", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Quand tu dois expliquer un sujet complexe, tu :",
+     "options": [
+       {"label": "Explores le sujet avec ton interlocuteur — la structure émerge de la conversation", "value": "A", "score": 0.0},
+       {"label": "Structures mentalement avant de parler mais restes flexible", "value": "B", "score": 0.5},
+       {"label": "Prépares un plan détaillé avant toute explication importante", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "cognitive_structuring", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_cognitive_structuring_adapt_2", "axis_id": "cognitive_structuring", "difficulty": 0.6, "discriminability": 0.7,
+     "text": "Dans une réunion sans ordre du jour, tu :",
+     "options": [
+       {"label": "T'adaptes — l'improvisation produit souvent de bonnes choses", "value": "A", "score": 0.0},
+       {"label": "Proposes d'en définir un au démarrage pour être plus efficace", "value": "B", "score": 0.5},
+       {"label": "Te sens moins efficace — les réunions non structurées gaspillent du temps", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "cognitive_structuring", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_cognitive_granularity_1", "axis_id": "cognitive_granularity", "difficulty": 0.4, "discriminability": 0.65,
+     "text": "Face à un problème complexe, ton approche naturelle est de :",
+     "options": [
+       {"label": "Prendre de la hauteur — comprendre les dynamiques d'ensemble avant les détails", "value": "A", "score": 0.0},
+       {"label": "Alterner entre vue d'ensemble et analyse de détails critiques", "value": "B", "score": 0.5},
+       {"label": "Analyser les détails précisément — la vérité est dans les granularités", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_cognitive_granularity_2", "axis_id": "cognitive_granularity", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Quand tu lis un rapport ou document long, tu :",
+     "options": [
+       {"label": "Lis l'executive summary et navigues par mots-clés", "value": "A", "score": 0.0},
+       {"label": "Lis les parties qui te concernent en détail, le reste en diagonale", "value": "B", "score": 0.5},
+       {"label": "Lis en intégralité — les détails importent autant que les conclusions", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_cognitive_granularity_3", "axis_id": "cognitive_granularity", "difficulty": 0.65, "discriminability": 0.75,
+     "text": "On te dit que ton approche est 'trop dans les détails' ou 'pas assez dans les détails'. Lequel entends-tu le plus ?",
+     "options": [
+       {"label": "'Trop dans les grands principes' — j'ai du mal à descendre dans le concret", "value": "A", "score": 0.0},
+       {"label": "Les deux selon le contexte", "value": "B", "score": 0.5},
+       {"label": "'Trop dans les détails' — j'ai du mal à lâcher la précision", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_cognitive_granularity_adapt_1"]},
+
+    {"id": "q_cognitive_granularity_adapt_1", "axis_id": "cognitive_granularity", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Quand tu communiques une idée, tu commences naturellement par :",
+     "options": [
+       {"label": "Le contexte et les enjeux macro avant les solutions", "value": "A", "score": 0.0},
+       {"label": "La conclusion puis le raisonnement (pyramid principle)", "value": "B", "score": 0.5},
+       {"label": "Les preuves et faits précis qui soutiennent ta thèse", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "cognitive_granularity", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_cognitive_granularity_adapt_2", "axis_id": "cognitive_granularity", "difficulty": 0.7, "discriminability": 0.75,
+     "text": "Quand tu prends une décision, tes angles morts habituels sont plutôt :",
+     "options": [
+       {"label": "Les détails opérationnels — tu as tendance à sous-estimer la complexité d'exécution", "value": "A", "score": 0.0},
+       {"label": "Équilibré — tu navigues bien entre niveaux", "value": "B", "score": 0.5},
+       {"label": "La vue d'ensemble stratégique — tu te perds parfois dans les détails", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "cognitive_granularity", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_ambiguity_tolerance_1", "axis_id": "ambiguity_tolerance", "difficulty": 0.35, "discriminability": 0.65,
+     "text": "Face à une décision à prendre avec des informations incomplètes, tu :",
+     "options": [
+       {"label": "Attends d'avoir plus d'informations avant de décider", "value": "A", "score": 0.0},
+       {"label": "Décides avec les informations disponibles en restant prudent", "value": "B", "score": 0.5},
+       {"label": "Décides rapidement — l'information parfaite n'existe pas", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_ambiguity_tolerance_2", "axis_id": "ambiguity_tolerance", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Travailler sans feuille de route claire te :",
+     "options": [
+       {"label": "Stresse — j'ai besoin d'un plan pour être efficace", "value": "A", "score": 0.0},
+       {"label": "Convient si les objectifs sont clairs même si le chemin ne l'est pas", "value": "B", "score": 0.5},
+       {"label": "Stimule — l'absence de contrainte me permet d'explorer librement", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_ambiguity_tolerance_3", "axis_id": "ambiguity_tolerance", "difficulty": 0.7, "discriminability": 0.8,
+     "text": "Une réorganisation majeure annonce que ton rôle sera redéfini dans 3 mois. Ta réaction :",
+     "options": [
+       {"label": "Anxiété marquée — l'incertitude sur mon rôle me désorganise", "value": "A", "score": 0.0},
+       {"label": "Inconfort modéré — je cherche à clarifier rapidement ma situation", "value": "B", "score": 0.5},
+       {"label": "Curiosité — c'est une opportunité de redéfinir quelque chose de mieux", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_ambiguity_tolerance_adapt_1"]},
+
+    {"id": "q_ambiguity_tolerance_adapt_1", "axis_id": "ambiguity_tolerance", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "Combien de temps peux-tu fonctionner efficacement sans clarté sur tes priorités ?",
+     "options": [
+       {"label": "Quelques jours — j'ai besoin d'un cap clair pour être efficace", "value": "A", "score": 0.0},
+       {"label": "Quelques semaines — je m'organise mais ça finit par me peser", "value": "B", "score": 0.5},
+       {"label": "Plusieurs mois — je me fixe moi-même des priorités et avance", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "ambiguity_tolerance", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_ambiguity_tolerance_adapt_2", "axis_id": "ambiguity_tolerance", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Tu dois prendre une décision irréversible avec 60% de certitude. Tu :",
+     "options": [
+       {"label": "Attends — une décision irréversible demande un niveau de certitude plus élevé", "value": "A", "score": 0.0},
+       {"label": "Décides si les conséquences d'attendre sont trop coûteuses", "value": "B", "score": 0.5},
+       {"label": "Décides — 60% est suffisant, le reste se gère en chemin", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "ambiguity_tolerance", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_context_sensitivity_1", "axis_id": "context_sensitivity", "difficulty": 0.4, "discriminability": 0.65,
+     "text": "Ton comportement au travail change-t-il selon que tu es en équipe technique, managériale ou client ?",
+     "options": [
+       {"label": "Peu — je me comporte de manière cohérente dans tous les contextes", "value": "A", "score": 0.0},
+       {"label": "Modérément — j'adapte le style mais pas le fond", "value": "B", "score": 0.5},
+       {"label": "Beaucoup — je m'adapte radicalement selon mon interlocuteur", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_context_sensitivity_2", "axis_id": "context_sensitivity", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Tes priorités et ta façon de travailler changent-elles significativement quand tu changes d'organisation ?",
+     "options": [
+       {"label": "Non — mes fondamentaux de travail sont indépendants de l'organisation", "value": "A", "score": 0.0},
+       {"label": "Partiellement — j'adapte certaines choses mais garde mes méthodes clés", "value": "B", "score": 0.5},
+       {"label": "Oui — je m'adapte profondément à la culture et aux contraintes de chaque organisation", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_context_sensitivity_3", "axis_id": "context_sensitivity", "difficulty": 0.6, "discriminability": 0.75,
+     "text": "Ce que tu considères comme une 'bonne décision' change-t-il selon le contexte ?",
+     "options": [
+       {"label": "Non — mes critères de qualité de décision sont stables", "value": "A", "score": 0.0},
+       {"label": "Oui, sur certains aspects — la méthode change mais les valeurs restent", "value": "B", "score": 0.5},
+       {"label": "Oui profondément — le contexte définit entièrement ce qu'est une bonne décision", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_context_sensitivity_adapt_1"]},
+
+    {"id": "q_context_sensitivity_adapt_1", "axis_id": "context_sensitivity", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Cette sensibilité au contexte est-elle choisie ou automatique chez toi ?",
+     "options": [
+       {"label": "Choisie et délibérée — je m'adapte consciemment", "value": "A", "score": 0.5},
+       {"label": "Un mélange — certains ajustements sont automatiques, d'autres délibérés", "value": "B", "score": 0.75},
+       {"label": "Automatique — je m'adapte sans vraiment en avoir conscience", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "context_sensitivity", "condition": "high_value", "threshold": 0.6}, "activates": []},
+
+    {"id": "q_context_sensitivity_adapt_2", "axis_id": "context_sensitivity", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Est-ce que tu trouves que les autres changent trop peu selon toi ?",
+     "options": [
+       {"label": "Non — la cohérence est une qualité que j'apprécie", "value": "A", "score": 0.0},
+       {"label": "Parfois — certaines situations demandent plus d'adaptation", "value": "B", "score": 0.5},
+       {"label": "Souvent — je perçois que les gens manquent de flexibilité contextuelle", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "context_sensitivity", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_exploration_1", "axis_id": "exploration", "difficulty": 0.35, "discriminability": 0.65,
+     "text": "Dans ton travail, tu préfères :",
+     "options": [
+       {"label": "Approfondir et maîtriser parfaitement ton domaine d'expertise", "value": "A", "score": 0.0},
+       {"label": "Un mix entre expertise et découverte de nouveaux territoires", "value": "B", "score": 0.5},
+       {"label": "Explorer constamment de nouveaux domaines même au détriment de la maîtrise", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_exploration_2", "axis_id": "exploration", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Face à un problème résolu, tu as tendance à :",
+     "options": [
+       {"label": "Optimiser la solution trouvée pour la rendre encore meilleure", "value": "A", "score": 0.0},
+       {"label": "Passer à un autre problème tout en gardant un œil sur les optimisations possibles", "value": "B", "score": 0.5},
+       {"label": "Passer à autre chose — une fois résolu, ça ne m'intéresse plus autant", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_exploration_3", "axis_id": "exploration", "difficulty": 0.65, "discriminability": 0.75,
+     "text": "Changer de secteur ou de domaine tous les 3-5 ans te :",
+     "options": [
+       {"label": "Semble risqué — la profondeur d'expertise prend du temps à construire", "value": "A", "score": 0.0},
+       {"label": "Semble possible si les sujets sont cohérents entre eux", "value": "B", "score": 0.5},
+       {"label": "Attire — les transferts entre domaines sont sources de créativité et d'impact", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_exploration_adapt_1"]},
+
+    {"id": "q_exploration_adapt_1", "axis_id": "exploration", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Ce que tu cherches dans l'exploration est :",
+     "options": [
+       {"label": "De nouvelles méthodes applicables à mon domaine", "value": "A", "score": 0.3},
+       {"label": "De nouveaux problèmes à résoudre indépendamment du domaine", "value": "B", "score": 0.7},
+       {"label": "La nouveauté en elle-même — le processus de découverte est ce qui m'importe", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "exploration", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_exploration_adapt_2", "axis_id": "exploration", "difficulty": 0.6, "discriminability": 0.7,
+     "text": "Après 2 ans sur le même sujet, tu ressens généralement :",
+     "options": [
+       {"label": "Une maîtrise croissante qui renforce mon plaisir", "value": "A", "score": 0.0},
+       {"label": "Un besoin d'enrichissement — nouveaux angles, nouveaux collaborateurs", "value": "B", "score": 0.5},
+       {"label": "Une envie marquée de passer à autre chose", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "exploration", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_resilience_1", "axis_id": "resilience", "difficulty": 0.35, "discriminability": 0.65,
+     "text": "Face à un échec professionnel significatif, ton délai de récupération est généralement :",
+     "options": [
+       {"label": "Long — j'ai besoin de temps pour digérer et retrouver de l'élan", "value": "A", "score": 0.0},
+       {"label": "Modéré — quelques jours puis je me remets en route", "value": "B", "score": 0.5},
+       {"label": "Court — je m'en remets vite et y vois rapidement un apprentissage", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_resilience_2", "axis_id": "resilience", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Dans une période professionnelle difficile (charge, conflits, incertitude), tu :",
+     "options": [
+       {"label": "Ressens une dégradation significative de ton efficacité", "value": "A", "score": 0.0},
+       {"label": "Maintiens l'essentiel mais avec plus d'effort", "value": "B", "score": 0.5},
+       {"label": "Restes globalement opérationnel — tu puises dans tes ressources sans t'effondrer", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_resilience_3", "axis_id": "resilience", "difficulty": 0.7, "discriminability": 0.8,
+     "text": "Quand un projet que tu portes est annulé ou échoue, tu :",
+     "options": [
+       {"label": "As du mal à te détacher — l'échec reste présent longtemps", "value": "A", "score": 0.0},
+       {"label": "Fais le point, tires les leçons, passes à autre chose après un temps de traitement", "value": "B", "score": 0.5},
+       {"label": "Analyses rapidement, extrais ce qui est utile, repars — l'échec est un signal, pas une identité", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_resilience_adapt_1"]},
+
+    {"id": "q_resilience_adapt_1", "axis_id": "resilience", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "La résistance que tu montres face aux difficultés vient plutôt de :",
+     "options": [
+       {"label": "Je ne me sens pas particulièrement résistant face aux difficultés", "value": "A", "score": 0.0},
+       {"label": "Une capacité à compartimenter et à maintenir une routine stable", "value": "B", "score": 0.5},
+       {"label": "Un cadre de sens qui donne de la continuité même dans les échecs", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "resilience", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_resilience_adapt_2", "axis_id": "resilience", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Quand tu traverses une période de forte incertitude sur ton avenir professionnel, tu :",
+     "options": [
+       {"label": "As du mal à rester focalisé — l'incertitude prend beaucoup de place mentale", "value": "A", "score": 0.0},
+       {"label": "Gères avec un mix de préparation et d'acceptation", "value": "B", "score": 0.5},
+       {"label": "Continues à avancer sur ce que tu contrôles — le reste est hors de ta main", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "resilience", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_decision_speed_1", "axis_id": "decision_speed", "difficulty": 0.35, "discriminability": 0.65,
+     "text": "Quand tu dois choisir entre deux options comparables, tu :",
+     "options": [
+       {"label": "Prends le temps d'analyser en profondeur avant de décider", "value": "A", "score": 0.0},
+       {"label": "Décides dans un délai raisonnable avec une analyse suffisante", "value": "B", "score": 0.5},
+       {"label": "Décides vite — tu fais confiance à ton jugement et ajustes si nécessaire", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_decision_speed_2", "axis_id": "decision_speed", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Les personnes qui prennent du temps à décider te :",
+     "options": [
+       {"label": "Rassurent — une décision bien pesée est une décision de qualité", "value": "A", "score": 0.0},
+       {"label": "Conviennent si le délai est proportionnel à l'enjeu", "value": "B", "score": 0.5},
+       {"label": "Frustrent — la lenteur de décision est souvent un coût caché important", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_decision_speed_3", "axis_id": "decision_speed", "difficulty": 0.65, "discriminability": 0.75,
+     "text": "Dans ton expérience, tes meilleures décisions ont été :",
+     "options": [
+       {"label": "Celles que j'ai le plus mûries dans le temps", "value": "A", "score": 0.0},
+       {"label": "Un mix selon la nature et l'enjeu de la décision", "value": "B", "score": 0.5},
+       {"label": "Celles prises rapidement avec un bon instinct", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_decision_speed_adapt_1"]},
+
+    {"id": "q_decision_speed_adapt_1", "axis_id": "decision_speed", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "Quand tu décides vite, qu'est-ce qui pilote principalement ta décision ?",
+     "options": [
+       {"label": "Je ne me sens pas décider vite — j'ai besoin de temps", "value": "A", "score": 0.0},
+       {"label": "Une synthèse rapide des informations disponibles et des risques", "value": "B", "score": 0.5},
+       {"label": "Une intuition forte souvent difficile à expliquer mais rarement fausse", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "decision_speed", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_decision_speed_adapt_2", "axis_id": "decision_speed", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Le regret d'une décision non prise te pèse-t-il autant que le regret d'une mauvaise décision ?",
+     "options": [
+       {"label": "Non — une mauvaise décision pèse plus lourd qu'une non-décision", "value": "A", "score": 0.0},
+       {"label": "Ça dépend de l'enjeu et des alternatives perdues", "value": "B", "score": 0.5},
+       {"label": "Oui — ou même plus — l'inaction a un coût que les gens sous-estiment", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "decision_speed", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_risk_appetite_1", "axis_id": "risk_appetite", "difficulty": 0.35, "discriminability": 0.65,
+     "text": "Tu dois choisir entre un poste sécurisé à 70k€ et une startup avec 40k€ + equity. Tu :",
+     "options": [
+       {"label": "Choisis le poste sécurisé — la sécurité prime", "value": "A", "score": 0.0},
+       {"label": "Analyses en détail l'equity et le projet avant de décider", "value": "B", "score": 0.5},
+       {"label": "Es attiré par le potentiel asymétrique de la startup si le projet est convaincant", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_risk_appetite_2", "axis_id": "risk_appetite", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Quand tu lances quelque chose de nouveau (projet, initiative, idée), tu as besoin de :",
+     "options": [
+       {"label": "Validation et feedback préalable pour réduire le risque d'échec", "value": "A", "score": 0.0},
+       {"label": "Un minimum de validation puis tu itères", "value": "B", "score": 0.5},
+       {"label": "Te lancer — le retour d'expérience réel vaut mieux que la validation a priori", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_risk_appetite_3", "axis_id": "risk_appetite", "difficulty": 0.7, "discriminability": 0.8,
+     "text": "L'idée de prendre un risque professionnel majeur (reconversion, création, pari) te :",
+     "options": [
+       {"label": "Freine — les downside potentiels sont trop importants à mes yeux", "value": "A", "score": 0.0},
+       {"label": "Attire si le rapport risque/opportunité est clairement favorable", "value": "B", "score": 0.5},
+       {"label": "Motive — les grandes opportunités exigent des prises de risque significatives", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_risk_appetite_adapt_1"]},
+
+    {"id": "q_risk_appetite_adapt_1", "axis_id": "risk_appetite", "difficulty": 0.8, "discriminability": 0.85,
+     "text": "Comment tu vis une prise de risque qui a mal tourné ?",
+     "options": [
+       {"label": "Comme une erreur à éviter — ça renforce ma prudence", "value": "A", "score": 0.0},
+       {"label": "Comme une donnée à intégrer pour mieux calibrer les prochains risques", "value": "B", "score": 0.5},
+       {"label": "Comme une expérience presque inévitable sur le chemin de l'impact", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "risk_appetite", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_risk_appetite_adapt_2", "axis_id": "risk_appetite", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Le niveau de risque que tu prends dans ta vie pro est-il :",
+     "options": [
+       {"label": "Inférieur à ce que tu voudrais — la prudence l'emporte souvent", "value": "A", "score": 0.0},
+       {"label": "Aligné avec ce que tu juges raisonnable", "value": "B", "score": 0.5},
+       {"label": "Ce que tu assumes pleinement — tu vis avec les conséquences", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "risk_appetite", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_persistence_1", "axis_id": "persistence", "difficulty": 0.35, "discriminability": 0.65,
+     "text": "Face à un obstacle répété sur un projet, tu :",
+     "options": [
+       {"label": "Réexamines si l'objectif en vaut la peine — peut-être qu'il faut pivoter", "value": "A", "score": 0.0},
+       {"label": "Continues en adaptant ton approche", "value": "B", "score": 0.5},
+       {"label": "Maintiens le cap — les obstacles sont souvent les derniers avant le résultat", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_persistence_2", "axis_id": "persistence", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Tu portes une idée que personne autour de toi ne soutient. Tu :",
+     "options": [
+       {"label": "Remets en question l'idée — si personne ne la voit, c'est peut-être moi qui me trompe", "value": "A", "score": 0.0},
+       {"label": "Cherches à comprendre les objections et ajustes si elles sont fondées", "value": "B", "score": 0.5},
+       {"label": "Maintiens ta conviction — le consensus n'est pas un indicateur de vérité", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_persistence_3", "axis_id": "persistence", "difficulty": 0.65, "discriminability": 0.75,
+     "text": "Quand tu fixes un objectif à long terme (1-2 ans), ta trajectoire est :",
+     "options": [
+       {"label": "Souvent réorientée — les priorités évoluent et l'objectif change", "value": "A", "score": 0.0},
+       {"label": "Globalement maintenue avec des ajustements de parcours", "value": "B", "score": 0.5},
+       {"label": "Tenue avec constance — changer de cap en cours de route me coûte", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_persistence_adapt_1"]},
+
+    {"id": "q_persistence_adapt_1", "axis_id": "persistence", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Ce qui te maintient dans la direction quand tout résiste est :",
+     "options": [
+       {"label": "Je ne me sens pas particulièrement persistant face aux résistances", "value": "A", "score": 0.0},
+       {"label": "La conviction que l'objectif est important et réalisable", "value": "B", "score": 0.5},
+       {"label": "Un engagement identitaire — abandonner serait trahir quelque chose d'important en moi", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "persistence", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_persistence_adapt_2", "axis_id": "persistence", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Es-tu meilleur au démarrage d'un projet ou dans sa phase longue d'exécution ?",
+     "options": [
+       {"label": "Au démarrage — le lancement me donne de l'énergie, l'exécution longue m'épuise", "value": "A", "score": 0.0},
+       {"label": "Les deux selon la nature du projet", "value": "B", "score": 0.5},
+       {"label": "Dans la phase longue — ma valeur s'exprime dans la durée", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "persistence", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []},
+
+    {"id": "q_value_orientation_1", "axis_id": "value_orientation", "difficulty": 0.35, "discriminability": 0.65,
+     "text": "Dans ton travail, ce qui te motive en profondeur est :",
+     "options": [
+       {"label": "La qualité de l'exécution et le plaisir intrinsèque du travail bien fait", "value": "A", "score": 0.0},
+       {"label": "Un mix entre satisfaction intrinsèque et impact externe", "value": "B", "score": 0.5},
+       {"label": "L'impact sur les personnes, la société ou un enjeu qui te dépasse", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_value_orientation_2", "axis_id": "value_orientation", "difficulty": 0.5, "discriminability": 0.7,
+     "text": "Si on te proposait un rôle très bien payé sur un sujet qui ne t'inspire pas, tu :",
+     "options": [
+       {"label": "Le considères sérieusement — la rémunération est un critère important", "value": "A", "score": 0.0},
+       {"label": "Analyses le rapport entre l'ennui potentiel et les bénéfices concrets", "value": "B", "score": 0.5},
+       {"label": "Déclinerais probablement — sans sens, la performance long terme s'effondre", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": []},
+
+    {"id": "q_value_orientation_3", "axis_id": "value_orientation", "difficulty": 0.65, "discriminability": 0.75,
+     "text": "Quand tu évalues une opportunité professionnelle, quel est ton premier filtre ?",
+     "options": [
+       {"label": "La qualité de l'équipe et les conditions concrètes de travail", "value": "A", "score": 0.0},
+       {"label": "L'intersection entre mes compétences, l'impact potentiel et les conditions", "value": "B", "score": 0.5},
+       {"label": "L'alignement avec ce en quoi je crois et ce que je veux contribuer au monde", "value": "C", "score": 1.0}
+     ], "trigger": null, "activates": ["q_value_orientation_adapt_1"]},
+
+    {"id": "q_value_orientation_adapt_1", "axis_id": "value_orientation", "difficulty": 0.75, "discriminability": 0.8,
+     "text": "Quand tes valeurs professionnelles entrent en conflit avec celles de ton organisation, tu :",
+     "options": [
+       {"label": "Adaptes ta position — c'est le jeu d'une organisation", "value": "A", "score": 0.0},
+       {"label": "Cherches à influencer l'organisation tout en t'adaptant en partie", "value": "B", "score": 0.5},
+       {"label": "Maintiens ta position et considères une sortie si le conflit est structurel", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "value_orientation", "condition": "high_value", "threshold": 0.65}, "activates": []},
+
+    {"id": "q_value_orientation_adapt_2", "axis_id": "value_orientation", "difficulty": 0.65, "discriminability": 0.7,
+     "text": "Peux-tu te souvenir d'un moment où tu as sacrifié une opportunité pour des raisons de valeurs ?",
+     "options": [
+       {"label": "Non — je n'ai jamais dû faire ce genre de choix", "value": "A", "score": 0.0},
+       {"label": "Oui, une ou deux fois sur des points précis", "value": "B", "score": 0.5},
+       {"label": "Oui, plusieurs fois — les compromis de valeurs sont des lignes rouges pour moi", "value": "C", "score": 1.0}
+     ], "trigger": {"axis_id": "value_orientation", "condition": "high_uncertainty", "threshold": 0.4}, "activates": []}
+  ]
+}
