@@ -1,15 +1,22 @@
-"""NextMove V5 — FastAPI application."""
+"""NextMove V5/V6 — FastAPI application."""
 
 from __future__ import annotations
 
+from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from ontology.registry import AxisRegistry, QuestionBank
+from ontology.rule_store import RuleStore, OntologyRule
 from engine.context import ContextEngine, KNOWN_CONTEXTS
 from engine.rules import RuleEngine
 from engine.scorer import ProfileScorer
 from engine.explainer import Explainer
+from engine.signals import SignalComputer
+from engine.v6_rules import V6RuleEngine
+from engine.transformation import TransformationEngine
+from engine.audit import AuditLog
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
@@ -18,9 +25,9 @@ from api.models import (
 )
 
 app = FastAPI(
-    title="NextMove V5",
-    description="Living ontology engine for professional preference modeling",
-    version="5.0.0",
+    title="NextMove V6",
+    description="Living ontology engine — rule-driven, interpretable, evolvable",
+    version="6.0.0",
 )
 
 app.add_middleware(
@@ -33,11 +40,16 @@ app.add_middleware(
 # --- Singletons ---
 _registry = AxisRegistry()
 _bank = QuestionBank()
+_rule_store = RuleStore()
 _context_engine = ContextEngine()
 _rule_engine = RuleEngine()
+_v6_rule_engine = V6RuleEngine()
 _scorer = ProfileScorer(_registry, _bank)
 _explainer = Explainer()
 _questionnaire = AdaptiveQuestionnaire(_registry, _bank)
+_signal_computer = SignalComputer()
+_audit_log = AuditLog()
+_transformation_engine = TransformationEngine(_registry, _audit_log)
 
 
 # ===================================================================
@@ -163,12 +175,12 @@ def score_profile(req: ScoreRequest):
 
 
 # ===================================================================
-# RULES
+# RULES (V5 — axis-embedded)
 # ===================================================================
 
 @app.get("/rules")
-def get_rules(context: str | None = None):
-    """Inspect all rules — which are active, which are pending V6+."""
+def get_rules(context: Optional[str] = None):
+    """Inspect V5 axis-embedded rules — which fire for a given context."""
     fired = _rule_engine.evaluate(_registry, context)
     pending_v6 = _rule_engine.pending_v6_rules(_registry)
 
@@ -177,6 +189,205 @@ def get_rules(context: str | None = None):
         pending_v6_rules=pending_v6,
         context_id=context,
     )
+
+
+# ===================================================================
+# RULES V6 — standalone rule store
+# ===================================================================
+
+class SignalInjectRequest(BaseModel):
+    signals: dict
+    context: Optional[str] = None
+
+
+@app.get("/v6/rules")
+def get_v6_rules(context: Optional[str] = None):
+    """Return all V6 rules from the standalone rule store."""
+    rules = _rule_store.all_active()
+    immediate = _v6_rule_engine.evaluate_immediate(_rule_store, context)
+    return {
+        "total_rules": len(rules),
+        "immediate_firings": [
+            {"rule_id": f.rule_id, "type": f.rule_type, "priority": f.priority,
+             "condition": f.condition_met, "action": f.action_description}
+            for f in immediate
+        ],
+        "all_rules": [
+            {"id": r.id, "type": r.type, "priority": r.priority,
+             "requires_data": r.requires_data, "active": r.active,
+             "explanation": r.explanation}
+            for r in rules
+        ],
+        "context": context,
+    }
+
+
+@app.post("/v6/rules/evaluate")
+def evaluate_v6_rules_with_signals(req: SignalInjectRequest):
+    """
+    Evaluate V6 rules with injected signals.
+    Signals format: {"axis_id": {"variance": 0.8, "internal_consistency": 0.4, ...}}
+    Correlation signals: {"axis_a__axis_b": {"correlation": 0.9}}
+    """
+    from engine.signals import SignalSet
+    # Convert string keys like "rigor__cognitive_structuring" to tuple keys
+    raw = req.signals
+    signals = SignalSet()
+    for k, v in raw.items():
+        if "__" in k:
+            parts = k.split("__", 1)
+            signals[(parts[0], parts[1])] = v
+            signals[(parts[1], parts[0])] = v
+        else:
+            signals[k] = v
+
+    all_firings = _v6_rule_engine.evaluate(_rule_store, req.context, signals)
+    return {
+        "firings": [
+            {
+                "rule_id": f.rule_id,
+                "type": f.rule_type,
+                "priority": f.priority,
+                "condition_met": f.condition_met,
+                "action": f.action_description,
+                "requires_execution": f.requires_execution,
+                "explanation": f.explanation,
+                "signals_used": f.signals_used,
+            }
+            for f in all_firings
+        ],
+        "structural_changes_pending": [
+            f.rule_id for f in all_firings if f.requires_execution
+        ],
+    }
+
+
+@app.post("/v6/transform/split/{rule_id}")
+def execute_split(rule_id: str, signals: Optional[dict] = None):
+    """Execute a split rule on the axis registry."""
+    rule = _rule_store.get(rule_id)
+    if not rule:
+        raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found")
+    if rule.type != "split":
+        raise HTTPException(status_code=400, detail=f"Rule '{rule_id}' is not a split rule")
+
+    from engine.signals import SignalSet
+    signal_set = SignalSet(signals or {})
+    success, event, reason = _transformation_engine.execute_split(rule, signal_set)
+    if not success:
+        raise HTTPException(status_code=409, detail=reason)
+
+    return {
+        "success": True,
+        "reason": reason,
+        "event_id": event.event_id if event else None,
+        "new_axes": [spec.id for spec in rule.new_axes],
+    }
+
+
+@app.post("/v6/transform/merge/{rule_id}")
+def execute_merge(rule_id: str, signals: Optional[dict] = None):
+    """Execute a merge rule on the axis registry."""
+    rule = _rule_store.get(rule_id)
+    if not rule:
+        raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found")
+    if rule.type != "merge":
+        raise HTTPException(status_code=400, detail=f"Rule '{rule_id}' is not a merge rule")
+
+    from engine.signals import SignalSet
+    signal_set = SignalSet(signals or {})
+    success, event, reason = _transformation_engine.execute_merge(rule, signal_set)
+    if not success:
+        raise HTTPException(status_code=409, detail=reason)
+
+    return {
+        "success": True,
+        "reason": reason,
+        "event_id": event.event_id if event else None,
+        "merged_into": rule.new_axis.id if rule.new_axis else None,
+    }
+
+
+@app.post("/v6/transform/transform/{rule_id}")
+def execute_transform(rule_id: str, context: Optional[str] = None):
+    """Execute a transform rule (context-local axis redefinition)."""
+    rule = _rule_store.get(rule_id)
+    if not rule:
+        raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found")
+    if rule.type != "transform":
+        raise HTTPException(status_code=400, detail=f"Rule '{rule_id}' is not a transform rule")
+
+    success, event, reason = _transformation_engine.execute_transform(rule, context)
+    if not success:
+        raise HTTPException(status_code=409, detail=reason)
+
+    return {
+        "success": True,
+        "reason": reason,
+        "event_id": event.event_id if event else None,
+    }
+
+
+# ===================================================================
+# AUDIT LOG
+# ===================================================================
+
+@app.get("/v6/audit")
+def get_audit_log(limit: int = 20):
+    """Return recent audit log entries."""
+    return {
+        "total_events": _audit_log.count(),
+        "events": _audit_log.replay_summary()[-limit:],
+    }
+
+
+@app.get("/v6/audit/axis/{axis_id}")
+def get_audit_for_axis(axis_id: str):
+    """Return all audit events for a specific axis."""
+    events = _audit_log.events_for_axis(axis_id)
+    return {
+        "axis_id": axis_id,
+        "event_count": len(events),
+        "events": [e.model_dump() for e in events],
+    }
+
+
+# ===================================================================
+# AXIS CRUD (V6)
+# ===================================================================
+
+@app.post("/v6/axes/{axis_id}/mask")
+def mask_axis(axis_id: str, reason: str = "manual"):
+    """Mask an axis (make it invisible without deleting it)."""
+    ax = _registry.get(axis_id)
+    if ax is None:
+        raise HTTPException(status_code=404, detail=f"Axis '{axis_id}' not found")
+    _registry.mask(axis_id, reason)
+    _audit_log.record(
+        rule_id="manual_mask",
+        rule_type="mask",
+        axis_id=axis_id,
+        axes_involved=[axis_id],
+        explanation=f"Manual mask: {reason}",
+    )
+    return {"success": True, "axis_id": axis_id, "status": "masked"}
+
+
+@app.post("/v6/axes/{axis_id}/unmask")
+def unmask_axis(axis_id: str):
+    """Unmask a previously masked axis."""
+    ax = _registry.get(axis_id)
+    if ax is None:
+        raise HTTPException(status_code=404, detail=f"Axis '{axis_id}' not found")
+    _registry.unmask(axis_id)
+    _audit_log.record(
+        rule_id="manual_unmask",
+        rule_type="reweight",
+        axis_id=axis_id,
+        axes_involved=[axis_id],
+        explanation="Manual unmask — axis restored to active",
+    )
+    return {"success": True, "axis_id": axis_id, "status": "active"}
 
 
 # ===================================================================
@@ -203,7 +414,11 @@ def get_contexts():
 def health():
     return {
         "status": "ok",
-        "axes": len(_registry.all_active()),
+        "version": "6.0.0",
+        "axes_active": len(_registry.all_active()),
         "questions": len(_bank.all_ids()),
         "registry_version": _registry.version,
+        "rule_store_version": _rule_store.version,
+        "v6_rules": len(_rule_store.all_active()),
+        "audit_events": _audit_log.count(),
     }

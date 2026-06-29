@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "rules": [
+
+    {
+      "id": "rule_split_autonomy",
+      "type": "split",
+      "priority": 1,
+      "trigger": {
+        "axis": "autonomy",
+        "conditions": [
+          {"metric": "internal_consistency", "operator": "<", "value": 0.6}
+        ]
+      },
+      "action": {
+        "result": ["autonomy_strategic", "autonomy_operational"]
+      },
+      "new_axes": [
+        {
+          "id": "autonomy_strategic",
+          "label": "Autonomie stratégique",
+          "description": "Capacité à définir sa propre direction et ses priorités sans guidage externe.",
+          "layer": 1,
+          "split_from": "autonomy"
+        },
+        {
+          "id": "autonomy_operational",
+          "label": "Autonomie opérationnelle",
+          "description": "Capacité à exécuter et décider sans validation fréquente au niveau tactique.",
+          "layer": 1,
+          "split_from": "autonomy"
+        }
+      ],
+      "explanation": "Une faible consistance interne sur l'axe autonomie suggère que la dimension recouvre deux sous-dimensions distinctes : la capacité à définir sa direction (stratégique) et la capacité à exécuter sans validation (opérationnelle).",
+      "requires_data": true,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_split_rigor",
+      "type": "split",
+      "priority": 2,
+      "trigger": {
+        "axis": "rigor",
+        "conditions": [
+          {"metric": "internal_consistency", "operator": "<", "value": 0.55}
+        ]
+      },
+      "action": {
+        "result": ["rigor_precision", "rigor_formalization"]
+      },
+      "new_axes": [
+        {
+          "id": "rigor_precision",
+          "label": "Précision",
+          "description": "Exigence sur l'exactitude factuelle et la fiabilité des données.",
+          "layer": 3,
+          "split_from": "rigor"
+        },
+        {
+          "id": "rigor_formalization",
+          "label": "Formalisation",
+          "description": "Besoin de documentation, de processus formels et de traçabilité.",
+          "layer": 3,
+          "split_from": "rigor"
+        }
+      ],
+      "explanation": "Les axes précision et formalisation sont souvent corrélés mais peuvent dissocier : un expert peut être très précis sans être rigoureux sur la formalisation documentaire.",
+      "requires_data": true,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_merge_rigor_structuring",
+      "type": "merge",
+      "priority": 3,
+      "trigger": {
+        "axes": ["rigor", "cognitive_structuring"],
+        "conditions": [
+          {"metric": "correlation", "operator": ">", "value": 0.85}
+        ]
+      },
+      "action": {
+        "result": "rigor_and_structuring"
+      },
+      "new_axis": {
+        "id": "rigor_and_structuring",
+        "label": "Rigueur et structuration",
+        "description": "Dimension fusionnée : exigence sur la qualité combinée au besoin de cadres formels.",
+        "layer": 3,
+        "merged_from": ["rigor", "cognitive_structuring"]
+      },
+      "explanation": "Une corrélation élevée entre rigueur et structuration cognitive indique que ces deux dimensions mesurent essentiellement la même tendance sous-jacente : l'orientation vers la qualité formelle.",
+      "requires_data": true,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_merge_risk_exploration",
+      "type": "merge",
+      "priority": 4,
+      "trigger": {
+        "axes": ["risk_appetite", "exploration"],
+        "conditions": [
+          {"metric": "correlation", "operator": ">", "value": 0.85}
+        ]
+      },
+      "action": {
+        "result": "openness_to_novelty"
+      },
+      "new_axis": {
+        "id": "openness_to_novelty",
+        "label": "Ouverture à la nouveauté",
+        "description": "Dimension fusionnée : appétence au risque et tendance exploratoire forment un seul facteur d'ouverture.",
+        "layer": 4,
+        "merged_from": ["risk_appetite", "exploration"]
+      },
+      "explanation": "Appétence au risque et exploration sont théoriquement distinctes mais peuvent co-varier fortement dans certaines populations (entrepreneurs, chercheurs). Si la corrélation est > 0.85, la distinction empirique s'effondre.",
+      "requires_data": true,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_merge_stability_persistence",
+      "type": "merge",
+      "priority": 5,
+      "trigger": {
+        "axes": ["behavioral_stability", "persistence"],
+        "conditions": [
+          {"metric": "correlation", "operator": ">", "value": 0.80}
+        ]
+      },
+      "action": {
+        "result": "behavioral_consistency"
+      },
+      "new_axis": {
+        "id": "behavioral_consistency",
+        "label": "Consistance comportementale",
+        "description": "Dimension fusionnée : stabilité et persistance comme facteur unique de consistance dans le temps.",
+        "layer": 1,
+        "merged_from": ["behavioral_stability", "persistence"]
+      },
+      "explanation": "Stabilité comportementale et persistance partagent une racine commune : la tendance à maintenir ses comportements dans le temps. Si leur corrélation est forte, les séparer n'apporte pas d'information supplémentaire.",
+      "requires_data": true,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_mask_autonomy_clinical",
+      "type": "mask",
+      "priority": 10,
+      "trigger": {
+        "context": "clinical_team",
+        "axis": "autonomy",
+        "conditions": []
+      },
+      "action": {
+        "visibility": false,
+        "reason": "En équipe clinique, l'autonomie individuelle est structurellement contrainte par les protocoles de sécurité patient — mesurer ce qui ne peut pas varier n'apporte pas d'information utile."
+      },
+      "explanation": "Dans un contexte clinique strict, l'axe autonomie ne discrimine pas : tous les profils tendent vers le bas par nécessité protocolaire. L'axe est masqué pour éviter un faux signal.",
+      "requires_data": false,
+      "reversible": true,
+      "active": false
+    },
+
+    {
+      "id": "rule_reweight_startup_autonomy",
+      "type": "reweight",
+      "priority": 20,
+      "trigger": {
+        "context": "startup",
+        "axis": "autonomy",
+        "conditions": []
+      },
+      "action": {
+        "weight_multiplier": 1.5
+      },
+      "explanation": "En startup, l'autonomie est un critère de survie — son poids dans le profil final est amplifié.",
+      "requires_data": false,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_reweight_research_rigor",
+      "type": "reweight",
+      "priority": 21,
+      "trigger": {
+        "context": "research",
+        "axis": "rigor",
+        "conditions": []
+      },
+      "action": {
+        "weight_multiplier": 1.6
+      },
+      "explanation": "En recherche, la rigueur méthodologique est un critère de validité scientifique — son poids est amplifié.",
+      "requires_data": false,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_transform_autonomy_clinical",
+      "type": "transform",
+      "priority": 30,
+      "trigger": {
+        "axis": "autonomy",
+        "context": "clinical_team",
+        "conditions": []
+      },
+      "action": {
+        "new_label": "Autonomie sous contrainte protocole",
+        "new_description": "Capacité à exercer un jugement clinique dans les marges définies par les protocoles de sécurité — non pas l'absence de contraintes, mais la qualité de la décision dans un cadre contraint.",
+        "context_scope": "clinical_team"
+      },
+      "explanation": "En contexte clinique, 'autonomie' ne signifie pas l'absence de structure mais la qualité du jugement professionnel dans un cadre protocolaire. L'axe est réinterprété pour être pertinent dans ce contexte.",
+      "requires_data": false,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_transform_risk_research",
+      "type": "transform",
+      "priority": 31,
+      "trigger": {
+        "axis": "risk_appetite",
+        "context": "research",
+        "conditions": []
+      },
+      "action": {
+        "new_label": "Tolérance à l'incertitude épistémique",
+        "new_description": "Capacité à travailler sur des questions ouvertes sans garantie de résultat — le risque en recherche est l'incertitude sur la connaissance, pas le risque financier.",
+        "context_scope": "research"
+      },
+      "explanation": "En recherche, l'appétence au risque est mieux capturée comme tolérance à l'incertitude épistémique : travailler des années sur un problème sans savoir si la réponse existera.",
+      "requires_data": false,
+      "reversible": true,
+      "active": true
+    },
+
+    {
+      "id": "rule_suppress_low_discrimination",
+      "type": "mask",
+      "priority": 50,
+      "trigger": {
+        "axis": "__any__",
+        "conditions": [
+          {"metric": "discrimination_index", "operator": "<", "value": 0.15}
+        ]
+      },
+      "action": {
+        "visibility": false,
+        "reason": "Axe avec un index de discrimination trop faible — ne différencie pas les profils."
+      },
+      "explanation": "Un axe dont les réponses ne varient pas entre les individus n'apporte pas d'information utile pour la différenciation. Il est masqué jusqu'à révision du questionnaire.",
+      "requires_data": true,
+      "reversible": true,
+      "active": true
+    }
+  ]
+}
