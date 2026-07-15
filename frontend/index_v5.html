@@ -458,29 +458,37 @@ function updateQNav() {
 document.getElementById('qPrev').addEventListener('click', () => { if (qIndex > 0) renderQuestion(qIndex - 1); });
 document.getElementById('qNext').addEventListener('click', async () => {
   if (qIndex < questions.length - 1) { renderQuestion(qIndex + 1); return; }
-  // Score once to discover adaptive follow-ups triggered by uncertain axes
-  const r = await fetch(apiBase() + '/questionnaire/next', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ user_id: lastUserId, answers: qAnswers, already_seen: Object.keys(qAnswers) }),
-  });
-  if (r.ok) {
-    const data = await r.json();
-    const fresh = (data.next_questions || []).filter(nq => !questions.find(q => q.id === nq.id));
-    if (fresh.length) {
-      questions = questions.concat(fresh);
-      renderQuestion(qIndex + 1);
-      return;
+  clearError();
+  const nextBtn = document.getElementById('qNext');
+  nextBtn.disabled = true;
+  try {
+    // Score once to discover adaptive follow-ups triggered by uncertain axes
+    const r = await fetch(apiBase() + '/questionnaire/next', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ user_id: lastUserId, answers: qAnswers, already_seen: Object.keys(qAnswers) }),
+    });
+    if (r.ok) {
+      const data = await r.json();
+      const fresh = (data.next_questions || []).filter(nq => !questions.find(q => q.id === nq.id));
+      if (fresh.length) {
+        questions = questions.concat(fresh);
+        renderQuestion(qIndex + 1);
+        return;
+      }
     }
-  }
-  const scoreRes = await fetch(apiBase() + '/score', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ user_id: lastUserId, answers: qAnswers }),
-  });
-  if (scoreRes.ok) {
+    const scoreRes = await fetch(apiBase() + '/score', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ user_id: lastUserId, answers: qAnswers }),
+    });
+    if (!scoreRes.ok) { showError('Erreur au calcul du score (' + scoreRes.status + ').'); return; }
     const scored = await scoreRes.json();
     if (scored.archetype) renderArchetype(scored.archetype);
+    goStep(1);
+  } catch (e) {
+    showError('Impossible de joindre l\'API — vérifie ta connexion et réessaie.');
+  } finally {
+    nextBtn.disabled = false;
   }
-  goStep(1);
 });
 
 // =====================================================================
@@ -521,6 +529,9 @@ function renderAxisSliders() {
       <div class="axis-slider-row">
         <input type="range" min="0" max="100" value="50" data-axis="${a.id}" data-kind="level">
         <span class="axis-slider-value" data-axis="${a.id}" data-kind="level-val">50%</span>
+      </div>
+      <div class="axis-slider-row">
+        <label style="margin-top:4px;font-size:0.78rem;color:var(--muted);">Importance de cet axe pour le poste</label>
       </div>
       <div class="axis-slider-row">
         <input type="range" min="0" max="100" value="100" data-axis="${a.id}" data-kind="importance">
