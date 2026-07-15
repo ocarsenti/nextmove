@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 
+import anthropic
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
 
@@ -60,13 +61,16 @@ def extract_job_axes(description: str, registry: AxisRegistry) -> dict[str, dict
         raise RuntimeError("ANTHROPIC_API_KEY is not configured")
 
     client = Anthropic(api_key=api_key)
-    response = client.messages.create(
-        model=MODEL_ID,
-        max_tokens=2000,
-        temperature=0,
-        system=_build_system_prompt(registry),
-        messages=[{"role": "user", "content": description}],
-    )
+    try:
+        response = client.messages.create(
+            model=MODEL_ID,
+            max_tokens=2000,
+            temperature=0,
+            system=_build_system_prompt(registry),
+            messages=[{"role": "user", "content": description}],
+        )
+    except anthropic.APIError as e:
+        raise RuntimeError(f"Claude extraction failed: {e}") from e
 
     raw_text = response.content[0].text.strip()
     if raw_text.startswith("```"):

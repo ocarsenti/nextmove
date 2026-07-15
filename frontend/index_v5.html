@@ -269,6 +269,12 @@ textarea { min-height: 60px; resize: vertical; }
 
     <section class="card">
       <h2>Ou en créer une nouvelle</h2>
+      <label>Décris le poste (optionnel) — on pré-remplit les curseurs ci-dessous</label>
+      <textarea id="jobDescInput" placeholder="Colle ici l'offre d'emploi ou une description du poste…"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-full" id="extractJobBtn">Extraire les axes depuis la description</button>
+      </div>
+      <p id="extractStatus" style="font-size:0.8rem;color:var(--muted);margin:6px 0 0;"></p>
       <label>Identifiant (job_id)</label>
       <input type="text" id="newJobId" placeholder="ex: lead_dev_startup">
       <label>Titre</label>
@@ -530,6 +536,45 @@ function renderAxisSliders() {
     });
   });
 }
+
+function applyExtractedAxes(axis_requirements) {
+  document.querySelectorAll('#axisSlidersContainer input[type="range"]').forEach(inp => {
+    const axisId = inp.dataset.axis;
+    const kind = inp.dataset.kind;
+    const extracted = axis_requirements[axisId];
+    const value = extracted ? Math.round(extracted[kind] * 100) : (kind === 'importance' ? 0 : 50);
+    inp.value = value;
+    document.querySelector(`[data-axis="${axisId}"][data-kind="${kind}-val"]`).textContent = value + '%';
+  });
+}
+
+document.getElementById('extractJobBtn').addEventListener('click', async () => {
+  clearError();
+  const description = document.getElementById('jobDescInput').value.trim();
+  const status = document.getElementById('extractStatus');
+  if (!description) { showError('Colle une description de poste avant d\'extraire.'); return; }
+  status.textContent = 'Extraction en cours…';
+  document.getElementById('extractJobBtn').disabled = true;
+  try {
+    const r = await fetch(apiBase() + '/jobs/extract', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ description }),
+    });
+    if (!r.ok) {
+      status.textContent = '';
+      showError(r.status === 503 ? 'Extraction indisponible (clé API non configurée côté serveur).' : 'Erreur à l\'extraction (' + r.status + ').');
+      return;
+    }
+    const { axis_requirements } = await r.json();
+    applyExtractedAxes(axis_requirements);
+    status.textContent = 'Curseurs pré-remplis depuis la description — ajuste si besoin.';
+  } catch (e) {
+    status.textContent = '';
+    showError('Impossible de joindre l\'API.');
+  } finally {
+    document.getElementById('extractJobBtn').disabled = false;
+  }
+});
 
 document.getElementById('createJobBtn').addEventListener('click', async () => {
   clearError();

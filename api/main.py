@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-load_dotenv()
+load_dotenv(override=True)
 
 from ontology.registry import AxisRegistry, QuestionBank
 from ontology.rule_store import RuleStore, OntologyRule
