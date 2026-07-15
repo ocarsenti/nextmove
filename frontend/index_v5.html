@@ -129,6 +129,14 @@ textarea { min-height: 60px; resize: vertical; }
 .notice-box { font-size: 0.8rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; }
 .error-banner { display: none; background: #fbe4e6; color: var(--high); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; }
 .error-banner.show { display: block; }
+
+.arch-row { display: grid; grid-template-columns: 110px 1fr 48px; align-items: center; gap: 10px; margin-bottom: 10px; }
+.arch-name { font-size: 0.84rem; font-weight: 600; }
+.arch-track { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; height: 14px; overflow: hidden; position: relative; }
+.arch-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+.arch-fill.dominant { background: linear-gradient(90deg, var(--accent), var(--job-color)); }
+.arch-pct { font-size: 0.8rem; color: var(--muted); text-align: right; font-family: monospace; }
+.arch-lowconf-tag { font-size: 0.62rem; color: var(--medium); margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -240,6 +248,13 @@ textarea { min-height: 60px; resize: vertical; }
 
     <section class="card" id="lowConfSection" style="display:none;">
       <div class="notice-box" id="lowConfNotice"></div>
+    </section>
+
+    <section class="card">
+      <h2>Profil dominant</h2>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">Dérivé des mêmes 18 axes que les tensions ci-dessous — pas de questions séparées. Se réajuste si le contexte du poste masque certains axes.</p>
+      <div id="archetypeSummary" style="font-size:0.9rem;font-weight:600;margin-bottom:14px;"></div>
+      <div id="archetypeBars"></div>
     </section>
 
     <section class="card">
@@ -490,9 +505,27 @@ document.getElementById('toMatchBtn').addEventListener('click', async () => {
 // =====================================================================
 function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+function renderArchetype(arch) {
+  document.getElementById('archetypeSummary').textContent = arch.summary;
+  const container = document.getElementById('archetypeBars');
+  container.innerHTML = '';
+  arch.scores.forEach(s => {
+    const isDominant = s.name === arch.dominant;
+    const lowConfTag = s.confidence < 0.6 && s.percentage > 0
+      ? `<span class="arch-lowconf-tag">confiance ${Math.round(s.confidence * 100)}%</span>` : '';
+    container.innerHTML += `<div class="arch-row">
+      <div class="arch-name">${esc(s.name)}${lowConfTag}</div>
+      <div class="arch-track"><div class="arch-fill${isDominant ? ' dominant' : ''}" style="width:${s.percentage}%"></div></div>
+      <div class="arch-pct">${s.percentage}%</div>
+    </div>`;
+  });
+}
+
 function renderResult(result) {
   const job = jobs.find(j => j.job_id === result.job_id);
   document.getElementById('resultJobTitle').textContent = job ? job.title : result.job_id;
+
+  if (result.archetype) renderArchetype(result.archetype);
 
   const pct = Math.round(result.fit_score * 100);
   const circumference = 251.2;

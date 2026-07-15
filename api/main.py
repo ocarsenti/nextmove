@@ -18,6 +18,7 @@ from engine.signals import SignalComputer
 from engine.v6_rules import V6RuleEngine
 from engine.transformation import TransformationEngine
 from engine.matching import compute_tensions
+from engine.archetype import compute_archetype_distribution
 from engine.audit import AuditLog
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
@@ -175,6 +176,7 @@ def score_profile(req: ScoreRequest):
             "adaptive_activations": trace.adaptive_activations,
             "summary": _explainer.summary(trace),
         },
+        archetype=compute_archetype_distribution(profile, _registry).model_dump(),
     )
 
 
@@ -276,6 +278,7 @@ def match_profile_to_job(req: MatchRequest):
         top_tensions=result.top_tensions,
         low_confidence_axes=result.low_confidence_axes,
         skipped_axes=result.skipped_axes,
+        archetype=compute_archetype_distribution(profile, _registry).model_dump(),
     )
 
 

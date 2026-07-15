@@ -220,6 +220,35 @@ class MatchResult(BaseModel):
 
 
 # ===================================================================
+# ARCHETYPE DISTRIBUTION — the 5-persona summary from V4, ported and
+# refined onto the 18-axis ontology (see engine/archetype.py)
+# ===================================================================
+# V4 computed this from 4 discrete vote questions + a 6-axis tie-break
+# table. v5 drops the separate vote questions entirely: the distribution
+# is derived directly from the same axis_scores the questionnaire already
+# produces, using a wider signature per archetype (6-8 of the 16 primary
+# axes each, meta axes excluded). Masked/absent axes are excluded and the
+# remaining weights renormalized — so the reading legitimately shifts with
+# job context, which V4's fixed 6-axis table could never do.
+
+class ArchetypeScore(BaseModel):
+    name: str                     # "Builder" | "Expert" | "Operator" | "Leader" | "Explorer"
+    percentage: float             # 0-100, the 5 always sum to 100 (or to 0 if fully unscoreable)
+    confidence: float             # weighted mean confidence of the axes that contributed
+    axes_used: list[str]          # which axes actually contributed (post masking/renormalization)
+    axes_missing: list[str]       # axes in this archetype's signature that were masked/absent
+
+
+class ArchetypeDistribution(BaseModel):
+    user_id: str
+    scores: list[ArchetypeScore]  # always 5, sorted descending by percentage
+    dominant: str                 # name of the top archetype
+    secondary: Optional[str]      # name of the runner-up, if it's not negligibly close to 0
+    low_confidence: bool          # True if the dominant reading itself rests on thin signal
+    summary: str                  # short human-readable description of the dominance pattern
+
+
+# ===================================================================
 # EXPLANATION
 # ===================================================================
 

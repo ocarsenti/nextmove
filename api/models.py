@@ -20,6 +20,7 @@ class ScoreResponse(BaseModel):
     low_confidence_axes: list[str]
     pending_questions: list[str]
     explanation: dict
+    archetype: dict                  # ArchetypeDistribution.model_dump()
 
 
 class QuestionnaireResponse(BaseModel):
@@ -91,3 +92,4 @@ class MatchResponse(BaseModel):
     top_tensions: list[str]
     low_confidence_axes: list[str]
     skipped_axes: list[str]
+    archetype: dict
