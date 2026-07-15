@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXTMOVE V5</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --surface: #f1f2f5;
+  --border: #e1e4ea;
+  --text: #16181d;
+  --muted: #6b7280;
+  --accent: #3458e8;
+  --accent-hover: #2543c0;
+  --accent-dim: rgba(52,88,232,0.08);
+  --low: #1d9a5b;
+  --medium: #c2780a;
+  --high: #dc3545;
+  --candidate-color: #3458e8;
+  --job-color: #9333ea;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+.container { max-width: 920px; margin: 0 auto; padding: 16px 24px 60px; }
+
+.app-header { padding: 28px 24px 8px; text-align: center; position: relative; }
+.app-header h1 { font-size: 1.6rem; letter-spacing: 0.02em; }
+.app-header p { color: var(--muted); margin: 6px 0 0; font-size: 0.95rem; }
+
+.api-config { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+.api-config-row { display: flex; gap: 8px; align-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; }
+.api-config-row input { flex: 1; border: none; background: transparent; font-size: 0.82rem; color: var(--text); font-family: monospace; }
+.api-config-row input:focus { outline: none; }
+.api-status { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+.api-status.ok { background: var(--low); }
+.api-status.err { background: var(--high); }
+
+section.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
+section.card h2 { margin: 0 0 14px; font-size: 1.05rem; color: var(--accent); }
+label { display: block; font-size: 0.85rem; color: var(--muted); margin: 12px 0 4px; }
+
+input[type="text"], input[type="number"], textarea, select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); padding: 9px 10px; font-size: 0.92rem; font-family: inherit;
+}
+textarea { min-height: 60px; resize: vertical; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; border: none; border-radius: 10px; font-size: 0.92rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn-secondary:hover { background: var(--accent-dim); }
+.btn-full { width: 100%; }
+.btn-group { display: flex; gap: 12px; margin-top: 14px; }
+
+.step { display: none; }
+.step.active { display: block; }
+.step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+.step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+.step-dot.active { background: var(--accent); }
+.step-dot.done { background: var(--low); }
+
+.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.q-card p { font-size: 0.92rem; font-weight: 600; line-height: 1.4; margin-bottom: 10px; }
+.q-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.88rem; border: 1px solid transparent; transition: all 0.12s; margin-bottom: 4px; }
+.q-option:hover { background: var(--panel); border-color: var(--border); }
+.q-option.selected { background: var(--accent-dim); border-color: var(--accent); }
+.q-option input[type="radio"] { accent-color: var(--accent); flex-shrink: 0; }
+.q-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.q-progress-bar { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; height: 6px; overflow: hidden; }
+.q-progress-fill { background: var(--accent); height: 100%; transition: width 0.3s; }
+.q-progress-text { font-size: 0.76rem; color: var(--muted); white-space: nowrap; }
+.q-nav { display: flex; gap: 12px; margin-top: 16px; }
+.q-nav button { flex: 1; }
+
+.axis-badge { display: inline-block; font-size: 0.68rem; padding: 2px 7px; border-radius: 5px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); margin: 0 4px 4px 0; }
+.axis-badge.low-conf { background: #fdf0e0; color: var(--medium); border-color: var(--medium); }
+
+.job-picker { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.job-pill { padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+.job-pill:hover { border-color: var(--accent); }
+.job-pill.selected { background: var(--accent); color: white; border-color: var(--accent); }
+.job-empty { font-size: 0.85rem; color: var(--muted); font-style: italic; padding: 10px 0; }
+
+.axis-slider-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; margin-bottom: 4px; }
+.axis-slider-row label { margin: 10px 0 2px; grid-column: 1 / -1; }
+.axis-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+.axis-slider-value { font-size: 0.78rem; color: var(--muted); font-family: monospace; width: 34px; text-align: right; }
+
+.loading { text-align: center; padding: 60px 20px; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; margin: 0 auto 16px; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.fit-gauge-wrap { display: flex; align-items: center; gap: 20px; }
+.fit-gauge { position: relative; width: 96px; height: 96px; flex-shrink: 0; }
+.fit-gauge svg { transform: rotate(-90deg); }
+.fit-gauge-track { fill: none; stroke: var(--surface); stroke-width: 8; }
+.fit-gauge-fill { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+.fit-gauge-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; }
+.fit-caption { font-size: 0.84rem; color: var(--muted); }
+
+.tension-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--border); }
+.tension-card.intensity-low { border-left-color: var(--low); }
+.tension-card.intensity-medium { border-left-color: var(--medium); }
+.tension-card.intensity-high { border-left-color: var(--high); }
+.tension-card.is-low-conf { opacity: 0.6; }
+.tension-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+.tension-axis { font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.badge { font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; }
+.badge-LOW { background: #e3f5eb; color: var(--low); }
+.badge-MEDIUM { background: #fdf0e0; color: var(--medium); }
+.badge-HIGH { background: #fbe4e6; color: var(--high); }
+.tension-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+@media (max-width: 760px) { .tension-compare { grid-template-columns: 1fr; } }
+.tension-side { font-size: 0.85rem; padding: 10px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); }
+.tension-side-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 3px; }
+.tension-side.candidate .tension-side-tag { color: var(--candidate-color); }
+.tension-side.job .tension-side-tag { color: var(--job-color); }
+.tension-bar { height: 5px; border-radius: 3px; background: var(--surface); margin-top: 6px; overflow: hidden; }
+.tension-bar-fill { height: 100%; }
+.tension-side.candidate .tension-bar-fill { background: var(--candidate-color); }
+.tension-side.job .tension-bar-fill { background: var(--job-color); }
+.tension-interpretation { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+
+.notice-box { font-size: 0.8rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; }
+.error-banner { display: none; background: #fbe4e6; color: var(--high); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; }
+.error-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>NEXTMOVE V5</h1>
+  <p>Profil candidat &times; job card — tension par axe, jamais un verdict caché</p>
+</div>
+
+<div class="api-config">
+  <div class="api-config-row">
+    <span class="api-status" id="apiStatusDot"></span>
+    <span>API&nbsp;:</span>
+    <input type="text" id="apiBase" value="http://localhost:8000">
+    <button class="btn-secondary" style="padding:4px 10px;font-size:0.76rem;border-radius:6px;" onclick="checkApi()">Tester</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="step-indicator">
+    <div class="step-dot active" data-step="0"></div>
+    <div class="step-dot" data-step="1"></div>
+    <div class="step-dot" data-step="2"></div>
+    <div class="step-dot" data-step="3"></div>
+  </div>
+
+  <!-- STEP 0: QUESTIONNAIRE ADAPTATIF -->
+  <div class="step active" id="step-0">
+    <section class="card">
+      <h2>Questionnaire</h2>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">18 axes, questions adaptatives — plus tu réponds, plus le moteur affine les axes incertains.</p>
+      <div class="q-progress">
+        <div class="q-progress-bar"><div class="q-progress-fill" id="qProgressFill" style="width:0%"></div></div>
+        <span class="q-progress-text" id="qProgressText">0 / 0</span>
+      </div>
+      <div id="qContainer"></div>
+      <div class="q-nav">
+        <button class="btn btn-secondary" id="qPrev" disabled>Précédent</button>
+        <button class="btn btn-primary" id="qNext" disabled>Suivant</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- STEP 1: JOB CARD -->
+  <div class="step" id="step-1">
+    <section class="card">
+      <h2>Choisir une job card</h2>
+      <div class="job-picker" id="jobPicker"></div>
+      <div class="job-empty" id="jobEmptyMsg" style="display:none;">Aucune job card disponible sur cette API — crée-en une ci-dessous.</div>
+    </section>
+
+    <section class="card">
+      <h2>Ou en créer une nouvelle</h2>
+      <label>Identifiant (job_id)</label>
+      <input type="text" id="newJobId" placeholder="ex: lead_dev_startup">
+      <label>Titre</label>
+      <input type="text" id="newJobTitle" placeholder="ex: Lead Developer — Startup Seed">
+      <label>Contexte</label>
+      <select id="newJobContext">
+        <option value="">— aucun —</option>
+        <option value="startup">Startup / Scale-up</option>
+        <option value="corporate">Grande entreprise / Corporate</option>
+        <option value="consulting">Conseil / Consulting</option>
+        <option value="research">Recherche</option>
+        <option value="clinical_team">Équipe clinique / Santé</option>
+        <option value="public_sector">Secteur public</option>
+      </select>
+      <div id="axisSlidersContainer"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-full" id="createJobBtn">Créer cette job card</button>
+      </div>
+    </section>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="goStep(0)">Retour</button>
+      <button class="btn btn-primary" style="flex:1" id="toMatchBtn" disabled>Calculer la tension</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: LOADING -->
+  <div class="step" id="step-2">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p style="color:var(--muted);">Calcul en cours…</p>
+    </div>
+  </div>
+
+  <!-- STEP 3: RESULT -->
+  <div class="step" id="step-3">
+    <section class="card" style="text-align:center;">
+      <h2 id="resultJobTitle">Résultat</h2>
+      <div class="fit-gauge-wrap" style="justify-content:center;margin-top:14px;">
+        <div class="fit-gauge">
+          <svg width="96" height="96" viewBox="0 0 96 96">
+            <circle class="fit-gauge-track" cx="48" cy="48" r="40"></circle>
+            <circle class="fit-gauge-fill" id="fitGaugeFill" cx="48" cy="48" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+          </svg>
+          <div class="fit-gauge-label" id="fitGaugeLabel">0%</div>
+        </div>
+        <div class="fit-caption" style="text-align:left;">
+          fit_score — moyenne pondérée par importance des axes fiables uniquement.<br>
+          Ce n'est pas une recommandation, juste le résumé des tensions ci-dessous.
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="lowConfSection" style="display:none;">
+      <div class="notice-box" id="lowConfNotice"></div>
+    </section>
+
+    <section class="card">
+      <h2>Carte des tensions</h2>
+      <div id="tensionContainer"></div>
+    </section>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary btn-full" onclick="goStep(1)">Tester une autre job card</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =====================================================================
+// STATE
+// =====================================================================
+let currentStep = 0;
+let questions = [];
+let qAnswers = {};
+let seenQuestionIds = [];
+let axesById = {};
+let jobs = [];
+let selectedJobId = null;
+let lastUserId = 'candidate_' + Math.random().toString(36).slice(2, 8);
+
+function apiBase() { return document.getElementById('apiBase').value.replace(/\/$/, ''); }
+
+async function checkApi() {
+  const dot = document.getElementById('apiStatusDot');
+  try {
+    const r = await fetch(apiBase() + '/health');
+    if (!r.ok) throw new Error('bad status');
+    dot.className = 'api-status ok';
+    return true;
+  } catch (e) {
+    dot.className = 'api-status err';
+    return false;
+  }
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBanner');
+  b.textContent = msg;
+  b.classList.add('show');
+}
+function clearError() {
+  document.getElementById('errorBanner').classList.remove('show');
+}
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  document.querySelectorAll('.step-dot').forEach((d, i) => {
+    d.className = 'step-dot';
+    if (i < n) d.classList.add('done');
+    if (i === n) d.classList.add('active');
+  });
+  currentStep = n;
+  if (n === 1) loadJobs();
+}
+
+// =====================================================================
+// STEP 0 — QUESTIONNAIRE
+// =====================================================================
+async function loadAxes() {
+  const r = await fetch(apiBase() + '/axes');
+  const data = await r.json();
+  (data.axes || []).forEach(a => { axesById[a.id] = a; });
+}
+
+async function loadQuestionnaire() {
+  clearError();
+  const ok = await checkApi();
+  if (!ok) { showError("Impossible de joindre l'API à l'adresse indiquée. Vérifie l'URL et que le serveur tourne (uvicorn api.main:app)."); return; }
+  await loadAxes();
+  const r = await fetch(apiBase() + '/questionnaire');
+  const data = await r.json();
+  questions = (data.questions || []).filter(q => !q.trigger);
+  renderQuestion(0);
+}
+
+let qIndex = 0;
+function renderQuestion(idx) {
+  qIndex = idx;
+  const q = questions[qIndex];
+  if (!q) return;
+  const answered = Object.keys(qAnswers).length;
+  const pct = Math.round((answered / questions.length) * 100);
+  document.getElementById('qProgressFill').style.width = pct + '%';
+  document.getElementById('qProgressText').textContent = `${answered} / ${questions.length}`;
+  const container = document.getElementById('qContainer');
+  const saved = qAnswers[q.id] || '';
+  const axisLabel = (axesById[q.axis_id] || {}).label || q.axis_id;
+  let html = `<div class="q-card"><span class="axis-badge">${esc(axisLabel)}</span><p>${esc(q.text)}</p>`;
+  (q.options || []).forEach(opt => {
+    const checked = saved === opt.value ? 'checked' : '';
+    const sel = checked ? ' selected' : '';
+    html += `<label class="q-option${sel}">
+      <input type="radio" name="q_${q.id}" value="${opt.value}" ${checked}>
+      <span>${esc(opt.label)}</span>
+    </label>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  container.querySelectorAll('input[type="radio"]').forEach(input => {
+    input.addEventListener('change', () => {
+      qAnswers[q.id] = input.value;
+      container.querySelectorAll('.q-option').forEach(o => o.classList.remove('selected'));
+      input.closest('.q-option').classList.add('selected');
+      updateQNav();
+    });
+  });
+  updateQNav();
+}
+
+function updateQNav() {
+  const q = questions[qIndex];
+  document.getElementById('qPrev').disabled = qIndex === 0;
+  const nextBtn = document.getElementById('qNext');
+  nextBtn.disabled = !qAnswers[q.id];
+  nextBtn.textContent = 'Suivant';
+}
+
+document.getElementById('qPrev').addEventListener('click', () => { if (qIndex > 0) renderQuestion(qIndex - 1); });
+document.getElementById('qNext').addEventListener('click', async () => {
+  if (qIndex < questions.length - 1) { renderQuestion(qIndex + 1); return; }
+  // Score once to discover adaptive follow-ups triggered by uncertain axes
+  const r = await fetch(apiBase() + '/questionnaire/next', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ user_id: lastUserId, answers: qAnswers, already_seen: Object.keys(qAnswers) }),
+  });
+  if (r.ok) {
+    const data = await r.json();
+    const fresh = (data.next_questions || []).filter(nq => !questions.find(q => q.id === nq.id));
+    if (fresh.length) {
+      questions = questions.concat(fresh);
+      renderQuestion(qIndex + 1);
+      return;
+    }
+  }
+  goStep(1);
+});
+
+// =====================================================================
+// STEP 1 — JOB CARDS
+// =====================================================================
+async function loadJobs() {
+  const r = await fetch(apiBase() + '/jobs');
+  jobs = r.ok ? await r.json() : [];
+  const picker = document.getElementById('jobPicker');
+  const empty = document.getElementById('jobEmptyMsg');
+  picker.innerHTML = '';
+  empty.style.display = jobs.length ? 'none' : 'block';
+  jobs.forEach(j => {
+    const pill = document.createElement('div');
+    pill.className = 'job-pill' + (j.job_id === selectedJobId ? ' selected' : '');
+    pill.textContent = j.title;
+    pill.addEventListener('click', () => {
+      selectedJobId = j.job_id;
+      document.querySelectorAll('.job-pill').forEach(p => p.classList.remove('selected'));
+      pill.classList.add('selected');
+      document.getElementById('toMatchBtn').disabled = false;
+    });
+    picker.appendChild(pill);
+  });
+  renderAxisSliders();
+}
+
+function renderAxisSliders() {
+  const container = document.getElementById('axisSlidersContainer');
+  container.innerHTML = '<p style="font-size:0.8rem;color:var(--muted);margin-top:10px;">Niveau requis par axe (laisse à 50% les axes qui ne comptent pas pour ce poste, et baisse leur importance) :</p>';
+  const activeAxes = Object.values(axesById).filter(a => a.status === 'active' && !a.is_meta);
+  activeAxes.forEach(a => {
+    const row = document.createElement('div');
+    row.innerHTML = `
+      <div class="axis-slider-row">
+        <label style="margin-top:12px;">${esc(a.label)} — niveau requis</label>
+      </div>
+      <div class="axis-slider-row">
+        <input type="range" min="0" max="100" value="50" data-axis="${a.id}" data-kind="level">
+        <span class="axis-slider-value" data-axis="${a.id}" data-kind="level-val">50%</span>
+      </div>
+      <div class="axis-slider-row">
+        <input type="range" min="0" max="100" value="100" data-axis="${a.id}" data-kind="importance">
+        <span class="axis-slider-value" data-axis="${a.id}" data-kind="importance-val">100%</span>
+      </div>`;
+    container.appendChild(row);
+  });
+  container.querySelectorAll('input[type="range"]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const kind = inp.dataset.kind;
+      const axis = inp.dataset.axis;
+      container.querySelector(`[data-axis="${axis}"][data-kind="${kind}-val"]`).textContent = inp.value + '%';
+    });
+  });
+}
+
+document.getElementById('createJobBtn').addEventListener('click', async () => {
+  clearError();
+  const jobId = document.getElementById('newJobId').value.trim();
+  const title = document.getElementById('newJobTitle').value.trim();
+  const contextId = document.getElementById('newJobContext').value || null;
+  if (!jobId || !title) { showError('job_id et titre sont requis.'); return; }
+
+  const axis_requirements = {};
+  document.querySelectorAll('#axisSlidersContainer input[data-kind="level"]').forEach(inp => {
+    const axisId = inp.dataset.axis;
+    const importanceInp = document.querySelector(`[data-axis="${axisId}"][data-kind="importance"]`);
+    const importance = parseInt(importanceInp.value, 10) / 100;
+    if (importance > 0) {
+      axis_requirements[axisId] = { level: parseInt(inp.value, 10) / 100, importance };
+    }
+  });
+
+  const r = await fetch(apiBase() + '/jobs', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ job_id: jobId, title, context_id: contextId, description: '', axis_requirements }),
+  });
+  if (!r.ok) { showError('Erreur à la création de la job card (' + r.status + ').'); return; }
+  selectedJobId = jobId;
+  await loadJobs();
+  document.getElementById('toMatchBtn').disabled = false;
+});
+
+document.getElementById('toMatchBtn').addEventListener('click', async () => {
+  if (!selectedJobId) return;
+  goStep(2);
+  clearError();
+  try {
+    const r = await fetch(apiBase() + '/match', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ user_id: lastUserId, answers: qAnswers, job_id: selectedJobId }),
+    });
+    if (!r.ok) { showError('Erreur au calcul du match (' + r.status + ').'); goStep(1); return; }
+    const result = await r.json();
+    renderResult(result);
+    goStep(3);
+  } catch (e) {
+    showError('Impossible de joindre l\'API.');
+    goStep(1);
+  }
+});
+
+// =====================================================================
+// STEP 3 — RESULT
+// =====================================================================
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderResult(result) {
+  const job = jobs.find(j => j.job_id === result.job_id);
+  document.getElementById('resultJobTitle').textContent = job ? job.title : result.job_id;
+
+  const pct = Math.round(result.fit_score * 100);
+  const circumference = 251.2;
+  const offset = circumference - (circumference * result.fit_score);
+  document.getElementById('fitGaugeFill').style.strokeDashoffset = offset;
+  document.getElementById('fitGaugeLabel').textContent = pct + '%';
+
+  const lowConfSection = document.getElementById('lowConfSection');
+  const skipped = result.skipped_axes || [];
+  const lowConf = result.low_confidence_axes || [];
+  if (lowConf.length || skipped.length) {
+    lowConfSection.style.display = 'block';
+    let notice = '';
+    if (lowConf.length) {
+      notice += `Confiance insuffisante sur ${lowConf.length} axe(s) — exclus du fit_score : ` +
+        lowConf.map(id => esc((axesById[id] || {}).label || id)).join(', ') + '. ';
+    }
+    if (skipped.length) {
+      notice += `${skipped.length} axe(s) requis par le poste absents ou masqués dans le profil : ` +
+        skipped.map(id => esc((axesById[id] || {}).label || id)).join(', ') + '.';
+    }
+    document.getElementById('lowConfNotice').textContent = notice;
+  } else {
+    lowConfSection.style.display = 'none';
+  }
+
+  const tc = document.getElementById('tensionContainer');
+  tc.innerHTML = '';
+  const sorted = [...result.tensions].sort((a, b) => (b.distance * b.importance) - (a.distance * a.importance));
+  sorted.forEach(t => {
+    const lowConfClass = t.low_confidence ? ' is-low-conf' : '';
+    const badge = t.low_confidence
+      ? `<span class="badge" style="background:var(--surface);color:var(--muted);">CONFIANCE BASSE</span>`
+      : `<span class="badge badge-${t.intensity.toUpperCase()}">${t.intensity}</span>`;
+    tc.innerHTML += `<div class="tension-card intensity-${t.intensity}${lowConfClass}">
+      <div class="tension-header">
+        <div class="tension-axis">${esc(t.axis_label)}</div>
+        <div>${badge}</div>
+      </div>
+      <div class="tension-compare">
+        <div class="tension-side candidate">
+          <div class="tension-side-tag">Profil (confiance ${Math.round(t.candidate_confidence * 100)}%)</div>
+          ${Math.round(t.candidate_value * 100)}%
+          <div class="tension-bar"><div class="tension-bar-fill" style="width:${t.candidate_value * 100}%"></div></div>
+        </div>
+        <div class="tension-side job">
+          <div class="tension-side-tag">Poste — importance ${Math.round(t.importance * 100)}%</div>
+          ${Math.round(t.job_level * 100)}%
+          <div class="tension-bar"><div class="tension-bar-fill" style="width:${t.job_level * 100}%"></div></div>
+        </div>
+      </div>
+      <div class="tension-interpretation">${esc(t.interpretation)}</div>
+    </div>`;
+  });
+}
+
+// =====================================================================
+// BOOT
+// =====================================================================
+checkApi();
+loadQuestionnaire();
+</script>
+</body>
+</html>
