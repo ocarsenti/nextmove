@@ -166,6 +166,60 @@ class Profile(BaseModel):
 
 
 # ===================================================================
+# JOB CARD — persistent job-side counterpart to Profile
+# ===================================================================
+# A JobCard states, per axis, the level a role actually demands — filled
+# by a recruiter/hiring manager (or extracted from a job description),
+# independently of any candidate. Matching a Profile against a JobCard
+# is then a pure comparison, not a black-box score: every axis produces
+# an explicit tension (or its absence), the same philosophy V4 used for
+# comparing two jobs, ported here to the 18-axis living ontology.
+
+class JobAxisRequirement(BaseModel):
+    axis_id: str
+    level: float = Field(ge=0.0, le=1.0)        # required/expected level, same scale as AxisScore.raw_value
+    importance: float = Field(default=1.0, ge=0.0, le=1.0)  # how much this axis matters for THIS job
+    note: str = ""                              # optional human rationale for the level
+
+
+class JobCard(BaseModel):
+    job_id: str
+    title: str
+    context_id: Optional[str] = None            # links to ContextEngine's known contexts, if applicable
+    description: str = ""
+    axis_requirements: dict[str, JobAxisRequirement] = Field(default_factory=dict)
+    version: int = 1
+
+
+# ===================================================================
+# TENSION / MATCHING — candidate Profile vs. JobCard, axis by axis
+# ===================================================================
+
+class AxisTension(BaseModel):
+    axis_id: str
+    axis_label: str
+    candidate_value: float
+    candidate_confidence: float
+    job_level: float
+    importance: float
+    distance: float                              # abs(candidate_value - job_level), 0-1
+    intensity: str                                # "low" | "medium" | "high"
+    direction: str                                # "job_demands_more" | "job_demands_less" | "aligned"
+    low_confidence: bool                          # True if candidate signal too thin to trust this reading
+    interpretation: str
+
+
+class MatchResult(BaseModel):
+    user_id: str
+    job_id: str
+    tensions: list[AxisTension]
+    fit_score: float                              # transparent weighted average, NOT a hidden verdict
+    top_tensions: list[str]                        # axis_ids, highest intensity first (confident axes only)
+    low_confidence_axes: list[str]                 # axes excluded from fit_score / top_tensions, and why
+    skipped_axes: list[str]                        # axes in the job but absent/masked in the profile
+
+
+# ===================================================================
 # EXPLANATION
 # ===================================================================
 

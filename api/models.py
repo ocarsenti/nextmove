@@ -53,3 +53,41 @@ class NextQuestionsResponse(BaseModel):
     next_questions: list[dict]
     adaptive_activations: list[str]
     remaining_base: int
+
+
+# ===================================================================
+# JOB CARDS / MATCHING
+# ===================================================================
+
+class JobCardRequest(BaseModel):
+    job_id: str
+    title: str
+    context_id: Optional[str] = None
+    description: str = ""
+    axis_requirements: dict[str, dict]   # {axis_id: {"level": float, "importance": float, "note": str}}
+
+
+class JobCardResponse(BaseModel):
+    job_id: str
+    title: str
+    context_id: Optional[str]
+    description: str
+    axis_requirements: dict[str, dict]
+    version: int
+
+
+class MatchRequest(BaseModel):
+    user_id: str
+    answers: dict[str, str]
+    job_id: str
+    context_hint: Optional[str] = None
+
+
+class MatchResponse(BaseModel):
+    user_id: str
+    job_id: str
+    fit_score: float
+    tensions: list[dict]
+    top_tensions: list[str]
+    low_confidence_axes: list[str]
+    skipped_axes: list[str]

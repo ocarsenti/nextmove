@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from ontology.registry import AxisRegistry, QuestionBank
 from ontology.rule_store import RuleStore, OntologyRule
+from ontology.models import JobCard, JobAxisRequirement
 from engine.context import ContextEngine, KNOWN_CONTEXTS
 from engine.rules import RuleEngine
 from engine.scorer import ProfileScorer
@@ -16,12 +17,14 @@ from engine.explainer import Explainer
 from engine.signals import SignalComputer
 from engine.v6_rules import V6RuleEngine
 from engine.transformation import TransformationEngine
+from engine.matching import compute_tensions
 from engine.audit import AuditLog
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
     QuestionnaireResponse, AxisResponse, RulesReport,
     NextQuestionsRequest, NextQuestionsResponse,
+    JobCardRequest, JobCardResponse, MatchRequest, MatchResponse,
 )
 
 app = FastAPI(
@@ -50,6 +53,7 @@ _questionnaire = AdaptiveQuestionnaire(_registry, _bank)
 _signal_computer = SignalComputer()
 _audit_log = AuditLog()
 _transformation_engine = TransformationEngine(_registry, _audit_log)
+_job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no persistence layer yet)
 
 
 # ===================================================================
@@ -171,6 +175,107 @@ def score_profile(req: ScoreRequest):
             "adaptive_activations": trace.adaptive_activations,
             "summary": _explainer.summary(trace),
         },
+    )
+
+
+# ===================================================================
+# JOB CARDS
+# ===================================================================
+
+@app.post("/jobs", response_model=JobCardResponse)
+def create_job(req: JobCardRequest):
+    """Create or update a job card — the job-side counterpart to a candidate Profile."""
+    for axis_id in req.axis_requirements:
+        if _registry.get(axis_id) is None:
+            raise HTTPException(status_code=400, detail=f"Unknown axis_id: {axis_id}")
+
+    existing = _job_store.get(req.job_id)
+    version = existing.version + 1 if existing else 1
+
+    axis_requirements = {
+        axis_id: JobAxisRequirement(axis_id=axis_id, **fields)
+        for axis_id, fields in req.axis_requirements.items()
+    }
+    job = JobCard(
+        job_id=req.job_id,
+        title=req.title,
+        context_id=req.context_id,
+        description=req.description,
+        axis_requirements=axis_requirements,
+        version=version,
+    )
+    _job_store[req.job_id] = job
+    return JobCardResponse(
+        job_id=job.job_id,
+        title=job.title,
+        context_id=job.context_id,
+        description=job.description,
+        axis_requirements={k: v.model_dump() for k, v in job.axis_requirements.items()},
+        version=job.version,
+    )
+
+
+@app.get("/jobs", response_model=list[JobCardResponse])
+def list_jobs():
+    return [
+        JobCardResponse(
+            job_id=j.job_id, title=j.title, context_id=j.context_id,
+            description=j.description,
+            axis_requirements={k: v.model_dump() for k, v in j.axis_requirements.items()},
+            version=j.version,
+        )
+        for j in _job_store.values()
+    ]
+
+
+@app.get("/jobs/{job_id}", response_model=JobCardResponse)
+def get_job(job_id: str):
+    job = _job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"Unknown job_id: {job_id}")
+    return JobCardResponse(
+        job_id=job.job_id, title=job.title, context_id=job.context_id,
+        description=job.description,
+        axis_requirements={k: v.model_dump() for k, v in job.axis_requirements.items()},
+        version=job.version,
+    )
+
+
+# ===================================================================
+# MATCHING — candidate Profile vs. JobCard, axis by axis (V4 tension
+# principle ported to the 18-axis living ontology — see engine/matching.py)
+# ===================================================================
+
+@app.post("/match", response_model=MatchResponse)
+def match_profile_to_job(req: MatchRequest):
+    """Score a candidate's answers, then compare the resulting Profile to a JobCard.
+
+    Not a hidden verdict: every axis produces an explicit, inspectable tension.
+    fit_score is a transparent by-product of those tensions, not a recommendation.
+    """
+    job = _job_store.get(req.job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"Unknown job_id: {req.job_id}")
+
+    context_id: str | None = None
+    if req.context_hint:
+        context_id = _context_engine.detect_context(req.context_hint)
+        if context_id is None and req.context_hint in KNOWN_CONTEXTS:
+            context_id = req.context_hint
+    elif job.context_id:
+        context_id = job.context_id
+
+    profile = _scorer.score(req.user_id, req.answers, context_id)
+    result = compute_tensions(profile, job, _registry)
+
+    return MatchResponse(
+        user_id=result.user_id,
+        job_id=result.job_id,
+        fit_score=result.fit_score,
+        tensions=[t.model_dump() for t in result.tensions],
+        top_tensions=result.top_tensions,
+        low_confidence_axes=result.low_confidence_axes,
+        skipped_axes=result.skipped_axes,
     )
 
 
