@@ -3,3 +3,5 @@ __pycache__/
 *.pyo
 .env
 data/profiles/
+venv/
+*.log

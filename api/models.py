@@ -93,3 +93,11 @@ class MatchResponse(BaseModel):
     low_confidence_axes: list[str]
     skipped_axes: list[str]
     archetype: dict
+
+
+class JobExtractRequest(BaseModel):
+    description: str
+
+
+class JobExtractResponse(BaseModel):
+    axis_requirements: dict[str, dict]

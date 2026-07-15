@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from typing import Optional
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+load_dotenv()
 
 from ontology.registry import AxisRegistry, QuestionBank
 from ontology.rule_store import RuleStore, OntologyRule
@@ -20,12 +23,14 @@ from engine.transformation import TransformationEngine
 from engine.matching import compute_tensions
 from engine.archetype import compute_archetype_distribution
 from engine.audit import AuditLog
+from engine.job_extraction import extract_job_axes
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
     QuestionnaireResponse, AxisResponse, RulesReport,
     NextQuestionsRequest, NextQuestionsResponse,
     JobCardRequest, JobCardResponse, MatchRequest, MatchResponse,
+    JobExtractRequest, JobExtractResponse,
 )
 
 app = FastAPI(
@@ -183,6 +188,20 @@ def score_profile(req: ScoreRequest):
 # ===================================================================
 # JOB CARDS
 # ===================================================================
+
+@app.post("/jobs/extract", response_model=JobExtractResponse)
+def extract_job(req: JobExtractRequest):
+    """Extract axis_requirements from a free-text job description via Claude.
+
+    Returns the same {axis_id: {level, importance}} shape /jobs accepts, for
+    review/edit before creating the job card — no direct write here.
+    """
+    try:
+        axis_requirements = extract_job_axes(req.description, _registry)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    return JobExtractResponse(axis_requirements=axis_requirements)
+
 
 @app.post("/jobs", response_model=JobCardResponse)
 def create_job(req: JobCardRequest):
