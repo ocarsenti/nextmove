@@ -101,3 +101,11 @@ class JobConstraintsResponse(BaseModel):
     job_title: str
     detected_constraints: list[dict]
     job_narrative: str
+
+
+class JobExtractRequest(BaseModel):
+    description: str
+
+
+class JobExtractResponse(BaseModel):
+    axis_requirements: dict[str, dict]
