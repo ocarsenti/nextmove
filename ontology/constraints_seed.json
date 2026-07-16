@@ -1,0 +1,74 @@
+{
+  "constraints": [
+    {
+      "id": "C001",
+      "name": "Évoluer dans un environnement fortement contraint mais changeant",
+      "triggers": [
+        {"axis_id": "cognitive_structuring", "operator": ">", "threshold": 0.7},
+        {"axis_id": "ambiguity_tolerance", "operator": ">", "threshold": 0.6}
+      ],
+      "axes_involved": ["cognitive_structuring", "ambiguity_tolerance", "resilience"],
+      "risks": ["rigidité perçue face au changement", "fatigue décisionnelle"]
+    },
+    {
+      "id": "C002",
+      "name": "Influencer sans autorité hiérarchique",
+      "triggers": [
+        {"axis_id": "influence", "operator": ">", "threshold": 0.7},
+        {"axis_id": "social_interaction", "operator": ">", "threshold": 0.6}
+      ],
+      "axes_involved": ["influence", "situational_leadership", "resilience"],
+      "risks": ["frustration", "épuisement relationnel"]
+    },
+    {
+      "id": "C003",
+      "name": "Apprendre rapidement tout en maintenant un haut niveau d'expertise",
+      "triggers": [
+        {"axis_id": "exploration", "operator": ">", "threshold": 0.7},
+        {"axis_id": "rigor", "operator": ">", "threshold": 0.7}
+      ],
+      "axes_involved": ["exploration", "rigor", "cognitive_flexibility"],
+      "risks": ["surcharge cognitive", "dispersion"]
+    },
+    {
+      "id": "C004",
+      "name": "Décider vite malgré l'incertitude",
+      "triggers": [
+        {"axis_id": "decision_speed", "operator": ">", "threshold": 0.7},
+        {"axis_id": "ambiguity_tolerance", "operator": ">", "threshold": 0.6}
+      ],
+      "axes_involved": ["decision_speed", "ambiguity_tolerance", "resilience"],
+      "risks": ["stress décisionnel", "erreurs de jugement sous pression"]
+    },
+    {
+      "id": "C005",
+      "name": "Concilier innovation et conformité réglementaire",
+      "triggers": [
+        {"axis_id": "exploration", "operator": ">", "threshold": 0.6},
+        {"axis_id": "cognitive_structuring", "operator": ">", "threshold": 0.7}
+      ],
+      "axes_involved": ["exploration", "cognitive_structuring", "ambiguity_tolerance"],
+      "risks": ["tension entre créativité et cadre", "frustration procédurale"]
+    },
+    {
+      "id": "C006",
+      "name": "Gérer plusieurs temporalités et parties prenantes",
+      "triggers": [
+        {"axis_id": "social_interaction", "operator": ">", "threshold": 0.7},
+        {"axis_id": "cognitive_flexibility", "operator": ">", "threshold": 0.6}
+      ],
+      "axes_involved": ["social_interaction", "cognitive_flexibility", "resilience"],
+      "risks": ["fragmentation de l'attention", "fatigue relationnelle"]
+    },
+    {
+      "id": "C007",
+      "name": "Porter seul des décisions à fort impact",
+      "triggers": [
+        {"axis_id": "autonomy", "operator": ">", "threshold": 0.7},
+        {"axis_id": "decision_speed", "operator": ">", "threshold": 0.6}
+      ],
+      "axes_involved": ["autonomy", "resilience", "risk_appetite"],
+      "risks": ["isolement décisionnel", "charge de responsabilité"]
+    }
+  ]
+}

@@ -19,6 +19,7 @@ from engine.v6_rules import V6RuleEngine
 from engine.transformation import TransformationEngine
 from engine.matching import compute_tensions
 from engine.archetype import compute_archetype_distribution
+from engine.constraints import load_constraint_library, analyze_job
 from engine.audit import AuditLog
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
@@ -26,6 +27,7 @@ from api.models import (
     QuestionnaireResponse, AxisResponse, RulesReport,
     NextQuestionsRequest, NextQuestionsResponse,
     JobCardRequest, JobCardResponse, MatchRequest, MatchResponse,
+    JobConstraintsResponse,
 )
 
 app = FastAPI(
@@ -55,6 +57,7 @@ _signal_computer = SignalComputer()
 _audit_log = AuditLog()
 _transformation_engine = TransformationEngine(_registry, _audit_log)
 _job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no persistence layer yet)
+_constraint_library = load_constraint_library()
 
 
 # ===================================================================
@@ -243,6 +246,21 @@ def get_job(job_id: str):
     )
 
 
+@app.get("/jobs/{job_id}/constraints", response_model=JobConstraintsResponse)
+def get_job_constraints(job_id: str):
+    """What this job structurally demands — independent of any candidate."""
+    job = _job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"Unknown job_id: {job_id}")
+    result = analyze_job(job, _constraint_library, profile=None)
+    return JobConstraintsResponse(
+        job_id=result.job_id,
+        job_title=result.job_title,
+        detected_constraints=[c.model_dump() for c in result.detected_constraints],
+        job_narrative=result.job_narrative,
+    )
+
+
 # ===================================================================
 # MATCHING — candidate Profile vs. JobCard, axis by axis (V4 tension
 # principle ported to the 18-axis living ontology — see engine/matching.py)
@@ -269,6 +287,7 @@ def match_profile_to_job(req: MatchRequest):
 
     profile = _scorer.score(req.user_id, req.answers, context_id)
     result = compute_tensions(profile, job, _registry)
+    constraint_profile = analyze_job(job, _constraint_library, profile=profile)
 
     return MatchResponse(
         user_id=result.user_id,
@@ -279,6 +298,7 @@ def match_profile_to_job(req: MatchRequest):
         low_confidence_axes=result.low_confidence_axes,
         skipped_axes=result.skipped_axes,
         archetype=compute_archetype_distribution(profile, _registry).model_dump(),
+        job_constraints=constraint_profile.model_dump(),
     )
 
 

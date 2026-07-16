@@ -249,6 +249,54 @@ class ArchetypeDistribution(BaseModel):
 
 
 # ===================================================================
+# JOB CONSTRAINTS — qualitative diagnoses built from axis COMBINATIONS,
+# never a single axis alone (see engine/constraints.py)
+# ===================================================================
+# Mirrors EvidenceAble's core move: don't show raw signals (confounding=8,
+# selection_bias=5), produce a diagnosis ("this study can't identify a
+# causal effect because..."). Here: don't show raw axis levels, produce a
+# structural read of what the JOB actually demands ("influencing people
+# without formal authority") — then, separately, whether the candidate's
+# profile is compatible with that specific demand.
+#
+# A JobConstraint is detected from the JOB's axis_requirements (never from
+# a candidate) — it describes a property of the role itself. Compatibility
+# with a candidate is a distinct, later step.
+
+class ConstraintTrigger(BaseModel):
+    axis_id: str
+    operator: str    # ">" | ">=" | "<" | "<="
+    threshold: float  # 0-1, same scale as JobAxisRequirement.level
+
+
+class JobConstraint(BaseModel):
+    id: str
+    name: str
+    triggers: list[ConstraintTrigger]   # ALL must hold against job.axis_requirements (AND)
+    axes_involved: list[str]            # candidate axes checked for compatibility with this constraint
+    risks: list[str]                    # what tends to go wrong when a candidate is a poor fit for this constraint
+
+
+class ConstraintCompatibility(BaseModel):
+    constraint_id: str
+    constraint_name: str
+    status: str                # "aligned" | "tension" | "unknown"
+    axes_checked: list[str]    # candidate axes actually usable (present, active, confident enough)
+    axes_unavailable: list[str]  # axes_involved that were masked/absent/too uncertain to use
+    risks_flagged: list[str]   # subset of constraint.risks judged relevant given the candidate's profile
+    narrative: str
+
+
+class JobConstraintProfile(BaseModel):
+    job_id: str
+    job_title: str
+    detected_constraints: list[JobConstraint]
+    job_narrative: str                          # what this job structurally demands, independent of any candidate
+    compatibilities: list[ConstraintCompatibility]  # empty if no user_id / profile was supplied
+    match_narrative: str                         # empty if no candidate compared
+
+
+# ===================================================================
 # EXPLANATION
 # ===================================================================
 

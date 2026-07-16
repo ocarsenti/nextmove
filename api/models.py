@@ -93,3 +93,11 @@ class MatchResponse(BaseModel):
     low_confidence_axes: list[str]
     skipped_axes: list[str]
     archetype: dict
+    job_constraints: dict          # JobConstraintProfile.model_dump()
+
+
+class JobConstraintsResponse(BaseModel):
+    job_id: str
+    job_title: str
+    detected_constraints: list[dict]
+    job_narrative: str

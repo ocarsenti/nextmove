@@ -137,6 +137,14 @@ textarea { min-height: 60px; resize: vertical; }
 .arch-fill.dominant { background: linear-gradient(90deg, var(--accent), var(--job-color)); }
 .arch-pct { font-size: 0.8rem; color: var(--muted); text-align: right; font-family: monospace; }
 .arch-lowconf-tag { font-size: 0.62rem; color: var(--medium); margin-left: 6px; }
+
+.constraint-card { border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; border-left: 4px solid var(--border); background: var(--surface); }
+.constraint-card.aligned { border-left-color: var(--low); }
+.constraint-card.tension { border-left-color: var(--high); }
+.constraint-card.unknown { border-left-color: var(--border); opacity: 0.7; }
+.constraint-name { font-size: 0.86rem; font-weight: 700; margin-bottom: 4px; }
+.constraint-narrative { font-size: 0.83rem; color: var(--muted); }
+.constraint-risks { font-size: 0.74rem; color: var(--high); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -229,6 +237,12 @@ textarea { min-height: 60px; resize: vertical; }
 
   <!-- STEP 3: RESULT -->
   <div class="step" id="step-3">
+    <section class="card">
+      <h2>Ce que ce poste demande</h2>
+      <p id="jobNarrative" style="font-size:0.95rem;line-height:1.6;"></p>
+      <div id="constraintList" style="margin-top:14px;"></div>
+    </section>
+
     <section class="card" style="text-align:center;">
       <h2 id="resultJobTitle">Résultat</h2>
       <div class="fit-gauge-wrap" style="justify-content:center;margin-top:14px;">
@@ -521,10 +535,27 @@ function renderArchetype(arch) {
   });
 }
 
+function renderConstraints(jc) {
+  document.getElementById('jobNarrative').textContent = jc.job_narrative;
+  const list = document.getElementById('constraintList');
+  list.innerHTML = '';
+  if (!jc.compatibilities || !jc.compatibilities.length) return;
+  jc.compatibilities.forEach(c => {
+    const risks = c.risks_flagged && c.risks_flagged.length
+      ? `<div class="constraint-risks">Risques : ${c.risks_flagged.map(esc).join(', ')}</div>` : '';
+    list.innerHTML += `<div class="constraint-card ${c.status}">
+      <div class="constraint-name">${esc(c.constraint_name)}</div>
+      <div class="constraint-narrative">${esc(c.narrative)}</div>
+      ${risks}
+    </div>`;
+  });
+}
+
 function renderResult(result) {
   const job = jobs.find(j => j.job_id === result.job_id);
   document.getElementById('resultJobTitle').textContent = job ? job.title : result.job_id;
 
+  if (result.job_constraints) renderConstraints(result.job_constraints);
   if (result.archetype) renderArchetype(result.archetype);
 
   const pct = Math.round(result.fit_score * 100);
