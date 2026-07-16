@@ -297,6 +297,38 @@ class JobConstraintProfile(BaseModel):
 
 
 # ===================================================================
+# SIGNAL EXTRACTION — the traceable layer between raw job-description
+# text and axis_requirements (see engine/job_extraction.py)
+# ===================================================================
+# Splits what used to be a single opaque LLM call (text -> axis levels)
+# into two inspectable steps:
+#   1. LLM picks applicable signals from a FIXED, closed vocabulary
+#      (ontology/signals_seed.json) and must quote the exact phrase in
+#      the description that justifies each one — no free-form invention.
+#   2. A deterministic Python function (signals_to_axes) maps signals to
+#      axis levels via a fixed table, with no LLM involved. Same rule for
+#      every job, every time — reproducible and editable without touching
+#      a prompt.
+# If an axis level looks wrong, you can now see WHY: which signal fired,
+# and which sentence in the job description triggered it.
+
+class AxisEffect(BaseModel):
+    level: float = Field(ge=0.0, le=1.0)
+    importance: float = Field(ge=0.0, le=1.0)
+
+
+class JobSignal(BaseModel):
+    id: str
+    label: str
+    axis_effects: dict[str, AxisEffect]
+
+
+class DetectedSignal(BaseModel):
+    signal_id: str
+    source_phrase: str    # verbatim excerpt from the job description that justifies this signal
+
+
+# ===================================================================
 # EXPLANATION
 # ===================================================================
 

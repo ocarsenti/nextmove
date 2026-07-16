@@ -1,0 +1,91 @@
+{
+  "signals": [
+    {
+      "id": "cadre_reglementaire",
+      "label": "Environnement réglementé / conformité",
+      "axis_effects": {"cognitive_structuring": {"level": 0.8, "importance": 0.7}}
+    },
+    {
+      "id": "coordination_multi_equipes",
+      "label": "Coordination avec plusieurs équipes ou parties prenantes",
+      "axis_effects": {
+        "social_interaction": {"level": 0.85, "importance": 0.8},
+        "influence": {"level": 0.7, "importance": 0.5}
+      }
+    },
+    {
+      "id": "innovation_produit",
+      "label": "Innovation produit ou technologique",
+      "axis_effects": {"exploration": {"level": 0.8, "importance": 0.7}}
+    },
+    {
+      "id": "pilotage_projet",
+      "label": "Pilotage ou gestion de projet",
+      "axis_effects": {
+        "direction": {"level": 0.7, "importance": 0.6},
+        "cognitive_structuring": {"level": 0.6, "importance": 0.5}
+      }
+    },
+    {
+      "id": "autorite_absente",
+      "label": "Influence sans autorité hiérarchique formelle",
+      "axis_effects": {
+        "influence": {"level": 0.85, "importance": 0.8},
+        "situational_leadership": {"level": 0.75, "importance": 0.7}
+      }
+    },
+    {
+      "id": "decisions_rapides",
+      "label": "Prise de décision rapide, peu de temps de réflexion",
+      "axis_effects": {"decision_speed": {"level": 0.8, "importance": 0.7}}
+    },
+    {
+      "id": "contexte_ambigu",
+      "label": "Contexte flou, objectifs ou méthodes non stabilisés",
+      "axis_effects": {"ambiguity_tolerance": {"level": 0.8, "importance": 0.7}}
+    },
+    {
+      "id": "travail_autonome",
+      "label": "Travail en autonomie, peu de supervision directe",
+      "axis_effects": {"autonomy": {"level": 0.8, "importance": 0.7}}
+    },
+    {
+      "id": "expertise_pointue",
+      "label": "Expertise technique ou spécialisation poussée requise",
+      "axis_effects": {
+        "rigor": {"level": 0.85, "importance": 0.8},
+        "persistence": {"level": 0.6, "importance": 0.4}
+      }
+    },
+    {
+      "id": "polyvalence",
+      "label": "Sujets variés, changement fréquent de périmètre",
+      "axis_effects": {"cognitive_flexibility": {"level": 0.75, "importance": 0.6}}
+    },
+    {
+      "id": "processus_stricts",
+      "label": "Procédures ou processus stricts à respecter",
+      "axis_effects": {"cognitive_structuring": {"level": 0.85, "importance": 0.7}}
+    },
+    {
+      "id": "enjeux_forts",
+      "label": "Décisions à fort impact ou fortement irréversibles",
+      "axis_effects": {"risk_appetite": {"level": 0.7, "importance": 0.6}}
+    },
+    {
+      "id": "rythme_soutenu",
+      "label": "Charge de travail ou rythme soutenu dans la durée",
+      "axis_effects": {"resilience": {"level": 0.75, "importance": 0.6}}
+    },
+    {
+      "id": "environnement_stable",
+      "label": "Environnement stable, peu de changement organisationnel",
+      "axis_effects": {"behavioral_stability": {"level": 0.75, "importance": 0.6}}
+    },
+    {
+      "id": "mission_sens",
+      "label": "Mission à forte portée sociétale ou éthique",
+      "axis_effects": {"value_orientation": {"level": 0.8, "importance": 0.6}}
+    }
+  ]
+}

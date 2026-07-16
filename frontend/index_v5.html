@@ -146,6 +146,9 @@ textarea { min-height: 60px; resize: vertical; }
 .constraint-narrative { font-size: 0.83rem; color: var(--muted); }
 .constraint-risks { font-size: 0.74rem; color: var(--high); margin-top: 4px; }
 
+.signal-chip { display: inline-block; background: var(--accent-wash, var(--accent-dim)); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 4px 9px; font-size: 0.76rem; font-weight: 600; margin: 0 6px 6px 0; }
+.signal-source { font-size: 0.72rem; color: var(--muted); font-style: italic; margin: -4px 0 8px; }
+
 /* --- SHARE SECTION (badge + linkedin ring) --- */
 .share-section { text-align: center; }
 .share-section h2 { margin-bottom: 6px; }
@@ -283,6 +286,7 @@ textarea { min-height: 60px; resize: vertical; }
         <button class="btn btn-secondary btn-full" id="extractJobBtn">Extraire les axes depuis la description</button>
       </div>
       <p id="extractStatus" style="font-size:0.8rem;color:var(--muted);margin:6px 0 0;"></p>
+      <div id="signalsContainer" style="margin-top:10px;"></div>
       <label>Identifiant (job_id)</label>
       <input type="text" id="newJobId" placeholder="ex: lead_dev_startup">
       <label>Titre</label>
@@ -573,6 +577,25 @@ function applyExtractedAxes(axis_requirements) {
   });
 }
 
+function renderSignals(signals) {
+  const container = document.getElementById('signalsContainer');
+  container.innerHTML = '';
+  if (!signals || !signals.length) {
+    container.innerHTML = '<p style="font-size:0.8rem;color:var(--muted);">Aucun signal détecté dans le texte.</p>';
+    return;
+  }
+  const title = document.createElement('p');
+  title.style.cssText = 'font-size:0.78rem;color:var(--muted);margin-bottom:6px;';
+  title.textContent = 'Signaux détectés — d\'où viennent les niveaux ci-dessous :';
+  container.appendChild(title);
+  signals.forEach(s => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<span class="signal-chip">${esc(s.label)}</span>
+      <div class="signal-source">« ${esc(s.source_phrase)} »</div>`;
+    container.appendChild(wrap);
+  });
+}
+
 document.getElementById('extractJobBtn').addEventListener('click', async () => {
   clearError();
   const description = document.getElementById('jobDescInput').value.trim();
@@ -590,8 +613,9 @@ document.getElementById('extractJobBtn').addEventListener('click', async () => {
       showError(r.status === 503 ? 'Extraction indisponible (clé API non configurée côté serveur).' : 'Erreur à l\'extraction (' + r.status + ').');
       return;
     }
-    const { axis_requirements } = await r.json();
+    const { axis_requirements, signals } = await r.json();
     applyExtractedAxes(axis_requirements);
+    renderSignals(signals);
     status.textContent = 'Curseurs pré-remplis depuis la description — ajuste si besoin.';
   } catch (e) {
     status.textContent = '';

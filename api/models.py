@@ -109,3 +109,4 @@ class JobExtractRequest(BaseModel):
 
 class JobExtractResponse(BaseModel):
     axis_requirements: dict[str, dict]
+    signals: list[dict]        # [{signal_id, label, source_phrase}] — the traceable intermediate layer

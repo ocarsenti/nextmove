@@ -24,7 +24,7 @@ from engine.matching import compute_tensions
 from engine.archetype import compute_archetype_distribution
 from engine.constraints import load_constraint_library, analyze_job
 from engine.audit import AuditLog
-from engine.job_extraction import extract_job_axes
+from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
@@ -194,16 +194,31 @@ def score_profile(req: ScoreRequest):
 
 @app.post("/jobs/extract", response_model=JobExtractResponse)
 def extract_job(req: JobExtractRequest):
-    """Extract axis_requirements from a free-text job description via Claude.
+    """Extract axis_requirements from a free-text job description, via a
+    traceable two-step pipeline (see engine/job_extraction.py): the LLM only
+    picks signals from a fixed vocabulary and quotes the phrase that
+    justifies each one; a deterministic rule then maps signals to axes.
 
-    Returns the same {axis_id: {level, importance}} shape /jobs accepts, for
-    review/edit before creating the job card — no direct write here.
+    Returns both layers — axis_requirements (same shape /jobs accepts, for
+    review/edit before creating the job card) and the signals that produced
+    them, so a wrong-looking axis level can be traced back to what text
+    triggered it.
     """
     try:
-        axis_requirements = extract_job_axes(req.description, _registry)
+        signal_library = load_signal_library()
+        detected = extract_signals(req.description, signal_library)
+        axis_requirements = signals_to_axes(detected, signal_library)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
-    return JobExtractResponse(axis_requirements=axis_requirements)
+
+    labels = {s.id: s.label for s in signal_library}
+    return JobExtractResponse(
+        axis_requirements=axis_requirements,
+        signals=[
+            {"signal_id": d.signal_id, "label": labels.get(d.signal_id, d.signal_id), "source_phrase": d.source_phrase}
+            for d in detected
+        ],
+    )
 
 
 @app.post("/jobs", response_model=JobCardResponse)
