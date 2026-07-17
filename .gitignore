@@ -5,3 +5,6 @@ __pycache__/
 data/profiles/
 venv/
 *.log
+htmlcov/
+.coverage
+.pytest_cache/
