@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXTMOVE — Méthode &amp; transparence</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --surface: #f1f2f5;
+  --border: #e1e4ea;
+  --text: #16181d;
+  --muted: #6b7280;
+  --accent: #3458e8;
+  --accent-hover: #2543c0;
+  --accent-dim: rgba(52,88,232,0.08);
+  --low: #1d9a5b;
+  --medium: #c2780a;
+  --high: #dc3545;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+.container { max-width: 760px; margin: 0 auto; padding: 16px 24px 80px; }
+
+.app-header { padding: 40px 24px 8px; text-align: center; }
+.app-header h1 { font-size: 1.7rem; letter-spacing: 0.02em; }
+.app-header p { color: var(--muted); margin: 10px auto 0; max-width: 520px; font-size: 0.95rem; }
+
+.status-banner { display: flex; align-items: flex-start; gap: 12px; background: #fdf0e0; border: 1px solid #e8c98a; border-radius: 10px; padding: 16px 18px; margin: 28px 0; }
+.status-banner .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--medium); flex-shrink: 0; margin-top: 5px; }
+.status-banner strong { display: block; margin-bottom: 4px; font-size: 0.92rem; }
+.status-banner p { font-size: 0.88rem; color: #6b5219; }
+
+nav.toc { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 28px; }
+nav.toc h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 10px; }
+nav.toc ol { list-style: none; counter-reset: toc; }
+nav.toc li { counter-increment: toc; margin-bottom: 6px; font-size: 0.92rem; }
+nav.toc li::before { content: counter(toc) ". "; color: var(--accent); font-weight: 700; }
+nav.toc a { color: var(--text); text-decoration: none; }
+nav.toc a:hover { color: var(--accent); }
+
+section.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px 26px; margin-bottom: 20px; scroll-margin-top: 20px; }
+section.card h2 { font-size: 1.15rem; color: var(--accent); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+section.card h2 .num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+section.card p { font-size: 0.95rem; margin-bottom: 12px; }
+section.card p:last-child { margin-bottom: 0; }
+section.card ul { padding-left: 20px; margin-bottom: 12px; }
+section.card li { font-size: 0.93rem; margin-bottom: 6px; }
+
+.evidence-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.evidence-box .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+.evidence-box.pending { border-left: 3px solid var(--medium); }
+.evidence-box.done { border-left: 3px solid var(--low); }
+
+.limit-list li { list-style: none; padding-left: 22px; position: relative; }
+.limit-list li::before { content: "—"; position: absolute; left: 0; color: var(--high); font-weight: 700; }
+
+.arch-note { background: var(--accent-dim); border-radius: 8px; padding: 12px 16px; font-size: 0.88rem; margin-top: 10px; }
+
+.contact-box { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: var(--surface); border-radius: 8px; padding: 16px 18px; }
+.contact-box a.btn { background: var(--accent); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; }
+.contact-box a.btn:hover { background: var(--accent-hover); }
+
+footer.page-footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 36px; }
+footer.page-footer a { color: var(--accent); text-decoration: none; }
+
+.last-updated { font-size: 0.76rem; color: var(--muted); text-align: center; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>NEXTMOVE — Méthode &amp; transparence</h1>
+  <p>Ce que l'outil mesure, comment, et ce qu'il ne prouve pas encore. Cette page est référencée depuis le badge et l'application — elle est la même pour tout le monde.</p>
+</div>
+
+<div class="container">
+
+  <div class="status-banner">
+    <div class="dot"></div>
+    <div>
+      <strong>État actuel : validation en cours</strong>
+      <p>NextMove n'est pas, à ce jour, un instrument psychométrique validé. Cette page dit précisément ce qui a été vérifié, ce qui ne l'a pas encore été, et sera mise à jour à mesure que les études avancent — avec la date de chaque mise à jour.</p>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <h2>Sommaire</h2>
+    <ol>
+      <li><a href="#quest-ce-que-cest">Ce que NextMove est / n'est pas</a></li>
+      <li><a href="#comment-ca-marche">Comment ça fonctionne</a></li>
+      <li><a href="#validation">État de la validation scientifique</a></li>
+      <li><a href="#limites">Limites explicites</a></li>
+      <li><a href="#archetype">À propos de l'archétype préférentiel</a></li>
+      <li><a href="#donnees">Utilisation des données</a></li>
+      <li><a href="#recruteurs">Partage avec des tiers / recruteurs</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </nav>
+
+  <section class="card" id="quest-ce-que-cest">
+    <h2><span class="num">1</span>Ce que NextMove est / n'est pas</h2>
+    <p><strong>NextMove est</strong> un questionnaire d'auto-évaluation qui reflète vos réponses à un instant donné sur plusieurs dimensions de préférence professionnelle (autonomie, rythme de décision, rapport à l'incertitude, etc.), et un outil qui compare ces réponses aux exigences déclarées d'un poste pour faire apparaître des points d'alignement et de tension.</p>
+    <p><strong>NextMove n'est pas</strong> un test de personnalité au sens clinique, un diagnostic psychologique, ni un instrument de mesure validé scientifiquement au sens où le sont des outils comme le Big Five ou le HEXACO. Il ne prédit pas votre réussite dans un poste et ne garantit aucun résultat professionnel.</p>
+  </section>
+
+  <section class="card" id="comment-ca-marche">
+    <h2><span class="num">2</span>Comment ça fonctionne</h2>
+    <p>Un questionnaire adaptatif vous pose des questions sur plusieurs dimensions de préférence. Plus vos réponses sont incertaines ou marquées sur une dimension, plus l'outil pose de questions complémentaires pour affiner cette dimension précise — les dimensions déjà claires n'en reçoivent pas.</p>
+    <p>Ces réponses sont combinées en un profil, qui peut ensuite être comparé aux exigences d'un poste (renseignées par un recruteur, ou extraites automatiquement d'une description de poste). La comparaison fait apparaître, dimension par dimension, où votre profil déclaré et les exigences du poste s'accordent ou tirent en sens opposé — jamais un score unique qui déciderait à votre place.</p>
+    <p>Pour l'extraction depuis une description de poste : un modèle de langage identifie des signaux dans le texte (parmi une liste fermée et documentée), en citant la phrase exacte qui justifie chaque signal ; une règle déterministe et publique convertit ensuite ces signaux en niveaux par dimension. Aucune étape n'est une boîte noire non vérifiable.</p>
+  </section>
+
+  <section class="card" id="validation">
+    <h2><span class="num">3</span>État de la validation scientifique</h2>
+    <p>La validation d'un instrument de ce type comporte plusieurs niveaux distincts. Voici où en est chacun, à la date indiquée en bas de page :</p>
+
+    <div class="evidence-box pending">
+      <div class="label">Cohérence interne (les questions d'une même dimension mesurent-elles bien la même chose ?)</div>
+      <p>Pas encore mesurée sur un échantillon suffisant. Une étude est prévue sur les utilisateurs ayant explicitement consenti à y participer.</p>
+    </div>
+
+    <div class="evidence-box pending">
+      <div class="label">Reproductibilité à court terme (deux passages rapprochés donnent-ils un résultat stable ?)</div>
+      <p>Pas encore mesurée. NextMove mesure une préférence déclarée à un instant donné, pas un trait supposé immuable — la reproductibilité attendue est donc à court terme (quelques jours), pas sur plusieurs années.</p>
+    </div>
+
+    <div class="evidence-box pending">
+      <div class="label">Validité de construit (les dimensions mesurent-elles bien des choses distinctes ?)</div>
+      <p>Pas encore étudiée formellement (nécessite un échantillon plus large qu'aujourd'hui disponible).</p>
+    </div>
+
+    <div class="evidence-box pending">
+      <div class="label">Validité prédictive (un bon alignement prédit-il un meilleur résultat réel en poste ?)</div>
+      <p>Non étudiée, et non revendiquée. NextMove n'affirme pas qu'un score élevé améliore vos chances de réussite dans un poste.</p>
+    </div>
+  </section>
+
+  <section class="card" id="limites">
+    <h2><span class="num">4</span>Limites explicites</h2>
+    <ul class="limit-list">
+      <li>Un score reflète vos réponses au moment où vous les donnez — il peut changer si vous repassez le questionnaire plus tard, et c'est normal.</li>
+      <li>Les catégories affichées (Builder, Expert, Operator, Leader, Explorer) sont une simplification en 5 groupes d'un espace de préférences plus continu — deux personnes très différentes peuvent recevoir la même étiquette.</li>
+      <li>Comparer votre profil à un poste suppose que les deux mesures (votre auto-déclaration, l'estimation du poste) sont sur une échelle comparable — un point que l'étude de validation en cours cherche justement à vérifier.</li>
+      <li>NextMove ne garantit aucun résultat professionnel, aucune amélioration de carrière, aucune probabilité de réussite.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="archetype">
+    <h2><span class="num">5</span>À propos de l'archétype préférentiel</h2>
+    <p>L'"archétype préférentiel" affiché après le questionnaire (et sur le badge partageable) est un résumé calculé à partir de vos dimensions de préférence — pas une catégorie de personnalité distincte mesurée séparément. Le pourcentage affiché exprime à quel point vos réponses actuelles correspondent au profil de cet archétype, pas une probabilité ou un score de qualité.</p>
+    <div class="arch-note">Le mot "préférentiel" est choisi délibérément : il s'agit de ce que vous déclarez préférer aujourd'hui, pas d'un trait de personnalité stable.</div>
+  </section>
+
+  <section class="card" id="donnees">
+    <h2><span class="num">6</span>Utilisation des données</h2>
+    <p>Vos réponses au questionnaire peuvent être utilisées, sous réserve de votre consentement spécifique (distinct du consentement nécessaire au fonctionnement de l'outil), pour calculer des statistiques agrégées et anonymisées visant à valider et améliorer l'instrument (cohérence des questions, corrélations entre dimensions). Ce consentement peut être retiré à tout moment sans supprimer votre compte.</p>
+    <p>Pour le détail complet (durées de conservation, droits d'accès et d'effacement, base légale) : voir la <a href="/confidentialite">politique de confidentialité</a>.</p>
+  </section>
+
+  <section class="card" id="recruteurs">
+    <h2><span class="num">7</span>Partage avec des tiers / recruteurs</h2>
+    <p>NextMove est un outil destiné à un usage personnel. Vos résultats ne sont transmis à aucun recruteur ni employeur par défaut. Ils ne sont partagés avec un tiers que si vous en prenez explicitement l'initiative — par exemple en publiant vous-même votre badge sur LinkedIn.</p>
+  </section>
+
+  <section class="card" id="contact">
+    <h2><span class="num">8</span>Contact</h2>
+    <div class="contact-box">
+      <p style="margin:0;">Une question, une remarque, une demande liée à vos données ?</p>
+      <a class="btn" href="mailto:contact@nextmove.ai">Nous écrire</a>
+    </div>
+  </section>
+
+</div>
+
+<footer class="page-footer">
+  <p><a href="/">NextMove</a> · <a href="/confidentialite">Politique de confidentialité</a> · <a href="/cgu">Conditions générales d'utilisation</a></p>
+  <p class="last-updated">Dernière mise à jour de cette page : <span id="lastUpdated"></span></p>
+</footer>
+
+<script>
+  document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+</script>
+
+</body>
+</html>
