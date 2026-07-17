@@ -23,6 +23,8 @@ from engine.transformation import TransformationEngine
 from engine.matching import compute_tensions
 from engine.archetype import compute_archetype_distribution
 from engine.constraints import load_constraint_library, analyze_job
+from research import storage as research_storage
+from research.reliability import full_reliability_report
 from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
 from questionnaire.adaptive import AdaptiveQuestionnaire
@@ -33,6 +35,8 @@ from api.models import (
     JobCardRequest, JobCardResponse, MatchRequest, MatchResponse,
     JobConstraintsResponse,
     JobExtractRequest, JobExtractResponse,
+    ResearchConsentResponse, ResearchSubmitRequest, ResearchSubmitResponse,
+    ResearchWithdrawRequest, ResearchWithdrawResponse, ReliabilityReportResponse,
 )
 
 app = FastAPI(
@@ -63,6 +67,7 @@ _audit_log = AuditLog()
 _transformation_engine = TransformationEngine(_registry, _audit_log)
 _job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no persistence layer yet)
 _constraint_library = load_constraint_library()
+research_storage.init_db()
 
 
 # ===================================================================
@@ -566,6 +571,52 @@ def get_contexts():
         }
         for ctx_id, ctx in KNOWN_CONTEXTS.items()
     }
+
+
+# ===================================================================
+# RELIABILITY STUDY — separate from the product's own runtime state.
+# Requires dedicated consent, captured client-side before any call here.
+# ===================================================================
+
+@app.post("/research/consent", response_model=ResearchConsentResponse)
+def research_consent():
+    """Issue a participant_code for the reliability study. The caller (frontend)
+    must persist it locally to pair a future retest with this one — it is not
+    linked to any product account, email, or name."""
+    code = research_storage.create_participant()
+    return ResearchConsentResponse(participant_code=code)
+
+
+@app.post("/research/submit", response_model=ResearchSubmitResponse)
+def research_submit(req: ResearchSubmitRequest):
+    """Store raw answers (never derived scores) + the ontology version in
+    effect — recomputable later even if scoring logic changes."""
+    if not research_storage.participant_exists(req.participant_code):
+        raise HTTPException(status_code=404, detail="Unknown participant_code — call /research/consent first")
+    submission_id = research_storage.save_submission(
+        participant_code=req.participant_code,
+        registry_version=_registry.version,
+        answers=req.answers,
+        context_id=req.context_id,
+    )
+    return ResearchSubmitResponse(submission_id=submission_id)
+
+
+@app.post("/research/withdraw", response_model=ResearchWithdrawResponse)
+def research_withdraw(req: ResearchWithdrawRequest):
+    """Right to withdraw: deletes this participant's data entirely, immediately."""
+    deleted = research_storage.withdraw_consent(req.participant_code)
+    return ResearchWithdrawResponse(deleted_submissions=deleted)
+
+
+@app.get("/research/reliability-report", response_model=ReliabilityReportResponse)
+def reliability_report():
+    """Cronbach's alpha per axis, inter-axis correlations, short-term
+    test-retest — computed live from accumulated submissions. Below the
+    minimum respondent threshold, a value is reported as null/not
+    'reportable' rather than shown as a misleadingly precise number."""
+    report = full_reliability_report()
+    return ReliabilityReportResponse(**report)
 
 
 # ===================================================================

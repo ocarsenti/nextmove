@@ -5,3 +5,4 @@ __pycache__/
 data/profiles/
 venv/
 *.log
+research/*.db

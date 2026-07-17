@@ -70,6 +70,11 @@ textarea { min-height: 60px; resize: vertical; }
 .q-option:hover { background: var(--panel); border-color: var(--border); }
 .q-option.selected { background: var(--accent-dim); border-color: var(--accent); }
 .q-option input[type="radio"] { accent-color: var(--accent); flex-shrink: 0; }
+.consent-row { display: flex; align-items: flex-start; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; cursor: pointer; }
+.consent-row input[type="checkbox"] { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.consent-row span { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+.consent-row a { color: var(--accent); }
+
 .q-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .q-progress-bar { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; height: 6px; overflow: hidden; }
 .q-progress-fill { background: var(--accent); height: 100%; transition: width 0.3s; }
@@ -206,6 +211,10 @@ textarea { min-height: 60px; resize: vertical; }
     <section class="card">
       <h2>Questionnaire</h2>
       <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">18 axes, questions adaptatives — plus tu réponds, plus le moteur affine les axes incertains.</p>
+      <label class="consent-row">
+        <input type="checkbox" id="researchConsent">
+        <span>J'accepte que mes réponses (anonymisées, sans nom ni email) servent à vérifier la fiabilité du questionnaire — distinct de l'utilisation normale de l'outil, retirable à tout moment. <a href="/methode#validation" target="_blank">En savoir plus</a>.</span>
+      </label>
       <div class="q-progress">
         <div class="q-progress-bar"><div class="q-progress-fill" id="qProgressFill" style="width:0%"></div></div>
         <span class="q-progress-text" id="qProgressText">0 / 0</span>
@@ -501,6 +510,7 @@ document.getElementById('qNext').addEventListener('click', async () => {
     if (!scoreRes.ok) { showError('Erreur au calcul du score (' + scoreRes.status + ').'); return; }
     const scored = await scoreRes.json();
     if (scored.archetype) renderArchetype(scored.archetype);
+    await maybeSubmitToReliabilityStudy();
     goStep(1);
   } catch (e) {
     showError('Impossible de joindre l\'API — vérifie ta connexion et réessaie.');
@@ -508,6 +518,29 @@ document.getElementById('qNext').addEventListener('click', async () => {
     nextBtn.disabled = false;
   }
 });
+
+// Reliability study submission — entirely separate consent from the product
+// itself, opt-in, and never blocks the main flow if it fails (a research
+// pipeline outage must never prevent someone from using the tool).
+async function maybeSubmitToReliabilityStudy() {
+  const consentBox = document.getElementById('researchConsent');
+  if (!consentBox || !consentBox.checked) return;
+  try {
+    let code = localStorage.getItem('nextmove_research_code');
+    if (!code) {
+      const r = await fetch(apiBase() + '/research/consent', { method: 'POST' });
+      if (!r.ok) return;
+      code = (await r.json()).participant_code;
+      localStorage.setItem('nextmove_research_code', code);
+    }
+    await fetch(apiBase() + '/research/submit', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ participant_code: code, answers: qAnswers }),
+    });
+  } catch (e) {
+    // Silent — the reliability study is opt-in and secondary to the main flow.
+  }
+}
 
 // =====================================================================
 // STEP 1 — JOB CARDS

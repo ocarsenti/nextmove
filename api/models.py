@@ -110,3 +110,38 @@ class JobExtractRequest(BaseModel):
 class JobExtractResponse(BaseModel):
     axis_requirements: dict[str, dict]
     signals: list[dict]        # [{signal_id, label, source_phrase}] — the traceable intermediate layer
+
+
+# ===================================================================
+# RELIABILITY STUDY — separate from the product, requires explicit,
+# dedicated consent (see research/storage.py)
+# ===================================================================
+
+class ResearchConsentResponse(BaseModel):
+    participant_code: str
+
+
+class ResearchSubmitRequest(BaseModel):
+    participant_code: str
+    answers: dict[str, str]
+    context_id: Optional[str] = None
+
+
+class ResearchSubmitResponse(BaseModel):
+    submission_id: int
+
+
+class ResearchWithdrawRequest(BaseModel):
+    participant_code: str
+
+
+class ResearchWithdrawResponse(BaseModel):
+    deleted_submissions: int
+
+
+class ReliabilityReportResponse(BaseModel):
+    registry_version: int
+    n_total_submissions: int
+    internal_consistency: dict[str, dict]
+    inter_axis_correlations: dict[str, Optional[float]]
+    test_retest: dict[str, dict]
