@@ -110,3 +110,20 @@ class JobExtractRequest(BaseModel):
 class JobExtractResponse(BaseModel):
     axis_requirements: dict[str, dict]
     signals: list[dict]        # [{signal_id, label, source_phrase}] — the traceable intermediate layer
+
+
+# ===================================================================
+# TEST-RETEST STUDY
+# ===================================================================
+
+class RetestSaveRequest(BaseModel):
+    user_id: str
+    answers: dict[str, str]
+    context_hint: Optional[str] = None
+    participant_code: Optional[str] = None   # None on first passage; required on retest
+
+
+class RetestSaveResponse(BaseModel):
+    participant_code: str
+    passage_number: int
+    is_new_participant: bool

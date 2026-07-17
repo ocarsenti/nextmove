@@ -25,6 +25,7 @@ from engine.archetype import compute_archetype_distribution
 from engine.constraints import load_constraint_library, analyze_job
 from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
+from engine.retest_store import RetestStore, UnknownParticipantCode
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
@@ -33,6 +34,7 @@ from api.models import (
     JobCardRequest, JobCardResponse, MatchRequest, MatchResponse,
     JobConstraintsResponse,
     JobExtractRequest, JobExtractResponse,
+    RetestSaveRequest, RetestSaveResponse,
 )
 
 app = FastAPI(
@@ -63,6 +65,7 @@ _audit_log = AuditLog()
 _transformation_engine = TransformationEngine(_registry, _audit_log)
 _job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no persistence layer yet)
 _constraint_library = load_constraint_library()
+_retest_store = RetestStore()
 
 
 # ===================================================================
@@ -144,27 +147,26 @@ def get_next_questions(req: NextQuestionsRequest):
 # SCORING
 # ===================================================================
 
-@app.post("/score", response_model=ScoreResponse)
-def score_profile(req: ScoreRequest):
-    """Compute a profile from questionnaire answers."""
+def _compute_score(user_id: str, answers: dict[str, str], context_hint: Optional[str]) -> ScoreResponse:
+    """Shared scoring computation behind /score and /study/retest/save."""
     # Detect or resolve context
     context_id: str | None = None
-    if req.context_hint:
-        context_id = _context_engine.detect_context(req.context_hint)
-        if context_id is None and req.context_hint in KNOWN_CONTEXTS:
-            context_id = req.context_hint
+    if context_hint:
+        context_id = _context_engine.detect_context(context_hint)
+        if context_id is None and context_hint in KNOWN_CONTEXTS:
+            context_id = context_hint
 
     # Evaluate rules
     rules_fired = _rule_engine.evaluate(_registry, context_id)
 
     # Compute profile
-    profile = _scorer.score(req.user_id, req.answers, context_id)
+    profile = _scorer.score(user_id, answers, context_id)
 
     # Explanation
     trace = _explainer.explain(profile, rules_fired, _registry)
 
     # Pending questions
-    already_seen = set(req.answers.keys())
+    already_seen = set(answers.keys())
     pending = _questionnaire.pending_questions(profile, already_seen)
     low_conf = _scorer.low_confidence_axes(profile)
     weighted = _scorer.weighted_profile(profile)
@@ -185,6 +187,48 @@ def score_profile(req: ScoreRequest):
             "summary": _explainer.summary(trace),
         },
         archetype=compute_archetype_distribution(profile, _registry).model_dump(),
+    )
+
+
+@app.post("/score", response_model=ScoreResponse)
+def score_profile(req: ScoreRequest):
+    """Compute a profile from questionnaire answers."""
+    return _compute_score(req.user_id, req.answers, req.context_hint)
+
+
+@app.post("/study/retest/save", response_model=RetestSaveResponse)
+def save_retest_passage(req: RetestSaveRequest):
+    """Persist one test-retest passage for the reproducibility study.
+
+    Only called when the user has explicitly opted in. First passage:
+    omit participant_code, get one back to keep. Retest: pass the same
+    code back to link it to the first passage.
+    """
+    result = _compute_score(req.user_id, req.answers, req.context_hint)
+
+    try:
+        participant_code, passage_number = _retest_store.save_passage(
+            session_user_id=req.user_id,
+            context_id=result.context_detected,
+            registry_version=_registry.version,
+            answers=req.answers,
+            axis_scores=result.axis_scores,
+            weighted_scores=result.weighted_scores,
+            archetype_dominant=result.archetype.get("dominant"),
+            archetype_secondary=result.archetype.get("secondary"),
+            is_complete=result.is_complete,
+            participant_code=req.participant_code,
+        )
+    except UnknownParticipantCode:
+        raise HTTPException(
+            status_code=404,
+            detail="Code participant inconnu — vérifiez qu'il a été saisi correctement.",
+        )
+
+    return RetestSaveResponse(
+        participant_code=participant_code,
+        passage_number=passage_number,
+        is_new_participant=req.participant_code is None,
     )
 
 
