@@ -252,7 +252,7 @@ def quality_report():
     rows — separate from /study/retest/report, which covers reproducibility.
     Not exposed unauthenticated on the public domain, same as the retest report.
     """
-    return compute_quality_report(_retest_store)
+    return compute_quality_report(_retest_store, _bank, _registry)
 
 
 # ===================================================================

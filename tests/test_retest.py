@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from engine.retest_store import RetestStore, UnknownParticipantCode
 from engine.retest_analysis import compute_retest_report, _icc_1_1, _pearson
 from engine.quality_report import compute_quality_report
-from api.main import app, _questionnaire
+from api.main import app, _questionnaire, _bank, _registry
 
 client = TestClient(app)
 
@@ -160,7 +160,7 @@ class TestRetestAnalysis:
 class TestQualityReport:
     def test_empty_store_returns_empty_report(self, tmp_path):
         store = RetestStore(tmp_path / "retest.db")
-        report = compute_quality_report(store)
+        report = compute_quality_report(store, _bank, _registry)
         assert report["n_profiles"] == 0
         assert report["sample_sufficient"] is False
         assert report["axes"] == {}
@@ -171,7 +171,7 @@ class TestQualityReport:
         store.save_passage(**_passage_kwargs(
             axis_scores={"autonomy": _full_axis_score("autonomy", 0.6)},
         ))
-        report = compute_quality_report(store)
+        report = compute_quality_report(store, _bank, _registry)
         assert report["n_profiles"] == 1
 
     def test_incomplete_passage_excluded(self, tmp_path):
@@ -180,7 +180,7 @@ class TestQualityReport:
             axis_scores={"autonomy": _full_axis_score("autonomy", 0.6)},
             is_complete=False,
         ))
-        report = compute_quality_report(store)
+        report = compute_quality_report(store, _bank, _registry)
         assert report["n_profiles"] == 0
 
     def test_highly_correlated_axes_are_flagged(self, tmp_path):
@@ -196,7 +196,7 @@ class TestQualityReport:
                     "rigor": _full_axis_score("rigor", 0.5 + i * 0.2),
                 },
             ))
-        report = compute_quality_report(store)
+        report = compute_quality_report(store, _bank, _registry)
         assert report["n_profiles"] == 3
 
         pair = {frozenset([c["axis_a"], c["axis_b"]]): c for c in report["correlations"]}
@@ -215,7 +215,7 @@ class TestQualityReport:
                 session_user_id=f"user-{i}",
                 axis_scores={"autonomy": _full_axis_score("autonomy", 0.1 * (i % 10))},
             ))
-        report = compute_quality_report(store)
+        report = compute_quality_report(store, _bank, _registry)
         assert report["n_profiles"] == 30
         assert report["sample_sufficient"] is True
 
