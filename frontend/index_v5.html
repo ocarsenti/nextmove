@@ -227,6 +227,25 @@ textarea { min-height: 60px; resize: vertical; }
       <div id="archetypeBars"></div>
     </section>
 
+    <section class="card" id="retestCard">
+      <h2>Étude de reproductibilité (optionnel)</h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px;">
+        NextMove n'a pas encore mesuré si repasser le test à quelques jours d'intervalle donne un résultat stable.
+        Vous pouvez nous y aider — anonymement, sans email. Voir le détail sur
+        <a href="/nextmove-v5/methode.html#validation" target="_blank" style="color:var(--accent);">la page méthode</a>.
+      </p>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.85rem;color:var(--text);margin:0 0 10px;cursor:pointer;">
+        <input type="checkbox" id="retestConsent" style="margin-top:3px;">
+        <span>Je participe à l'étude : conserver ce passage pour le comparer à un second, dans quelques jours.</span>
+      </label>
+      <div id="retestConsentBody" style="display:none;">
+        <label for="retestCodeInput">Code de passage précédent (laisser vide s'il s'agit de votre premier passage)</label>
+        <input type="text" id="retestCodeInput" placeholder="ex: chien-pomme">
+        <button class="btn btn-secondary btn-full" id="retestSaveBtn" style="margin-top:10px;">Enregistrer ce passage</button>
+        <div id="retestResult" style="display:none;margin-top:12px;"></div>
+      </div>
+    </section>
+
     <section class="card share-section">
       <h2>Partagez votre archétype préférentiel</h2>
       <p style="color:var(--muted);font-size:0.9rem;margin-bottom:20px;">Téléchargez votre badge ou ajoutez un anneau à votre photo LinkedIn.</p>
@@ -693,6 +712,55 @@ function renderArchetype(arch) {
   window._archDist = arch;
   generateBadge(arch);
 }
+
+// =====================================================================
+// RETEST STUDY — opt-in save for short-term reproducibility measurement
+// =====================================================================
+document.getElementById('retestConsent').addEventListener('change', (e) => {
+  document.getElementById('retestConsentBody').style.display = e.target.checked ? 'block' : 'none';
+});
+
+document.getElementById('retestSaveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('retestSaveBtn');
+  const resultBox = document.getElementById('retestResult');
+  const codeInput = document.getElementById('retestCodeInput').value.trim();
+  btn.disabled = true;
+  resultBox.style.display = 'none';
+  try {
+    const body = { user_id: lastUserId, answers: qAnswers };
+    if (codeInput) body.participant_code = codeInput;
+    const r = await fetch(apiBase() + '/study/retest/save', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    resultBox.style.display = 'block';
+    if (r.status === 404) {
+      resultBox.innerHTML = `<div class="notice-box" style="margin:0;border-left:3px solid var(--high);">Code inconnu — vérifiez l'orthographe (ex: chien-pomme).</div>`;
+      return;
+    }
+    if (!r.ok) {
+      resultBox.innerHTML = `<div class="notice-box" style="margin:0;">Erreur lors de l'enregistrement (${r.status}).</div>`;
+      return;
+    }
+    const data = await r.json();
+    if (data.is_new_participant) {
+      resultBox.innerHTML = `<div class="notice-box" style="margin:0;">
+        Passage enregistré. Votre code : <strong style="color:var(--accent);">${esc(data.participant_code)}</strong><br>
+        Notez-le — vous en aurez besoin pour repasser le test dans quelques jours.
+      </div>`;
+    } else {
+      resultBox.innerHTML = `<div class="notice-box" style="margin:0;">
+        Passage n°${data.passage_number} enregistré pour le code <strong>${esc(data.participant_code)}</strong>. Merci d'avoir participé à l'étude !
+      </div>`;
+    }
+    document.getElementById('retestCodeInput').value = data.participant_code;
+  } catch (e) {
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `<div class="notice-box" style="margin:0;">Impossible de joindre l'API — vérifiez votre connexion et réessayez.</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 // =====================================================================
 // LINKEDIN SHARE — badge + photo ring (ported from NEXTMOVE-V4 landing/quiz.html)
