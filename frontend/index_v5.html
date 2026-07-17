@@ -700,11 +700,11 @@ function renderArchetype(arch) {
 const ARCH_IMAGES = {Builder:'images/builder.png',Expert:'images/expert.png',Operator:'images/operator.png',Leader:'images/leader.png',Explorer:'images/explorer.png'};
 const ARCH_COLORS = {Builder:'#9333ea',Expert:'#3b5bdb',Operator:'#dc3545',Leader:'#16a34a',Explorer:'#2563eb'};
 const ARCH_TAGLINES = {
-  Builder:"Je construis, je lance, je livre.",
-  Expert:"J'analyse, j'approfondis, je résous.",
-  Operator:"J'exécute, j'optimise, je fiabilise.",
-  Leader:"J'oriente, je fédère, j'arbitre.",
-  Explorer:"Je découvre, je teste, je pivote."
+  Builder:"Je préfère construire, lancer, livrer.",
+  Expert:"Je préfère analyser, approfondir, résoudre.",
+  Operator:"Je préfère exécuter, optimiser, fiabiliser.",
+  Leader:"Je préfère orienter, fédérer, arbitrer.",
+  Explorer:"Je préfère découvrir, tester, pivoter."
 };
 
 function switchTab(tab) {
@@ -752,8 +752,8 @@ function generateBadge(arch) {
     ctx.fillText(primary.name.toUpperCase(), cx, cy + imgH / 2 + 100);
 
     ctx.fillStyle = '#6b7280';
-    ctx.font = '32px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(`${primary.percentage}%`, cx, cy + imgH / 2 + 140);
+    ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText(`${primary.percentage}% de correspondance à mes réponses`, cx, cy + imgH / 2 + 140);
 
     ctx.fillStyle = '#374151';
     ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
@@ -765,9 +765,10 @@ function generateBadge(arch) {
       ctx.fillText(`+ ${secondary.name} (${secondary.percentage}%)`, cx, cy + imgH / 2 + 235);
     }
 
+    const todayStr = new Date().toLocaleDateString('fr-FR');
     ctx.fillStyle = '#9ca3af';
-    ctx.font = '22px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('discover your archetype', cx, H - 90);
+    ctx.font = '20px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText(`Auto-évaluation, non clinique — ${todayStr} — nextmove.ai/methode`, cx, H - 90);
     ctx.fillStyle = '#374151';
     ctx.font = 'bold 24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     ctx.fillText('nextmove.ai', cx, H - 55);
