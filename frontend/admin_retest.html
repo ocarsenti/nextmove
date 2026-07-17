@@ -47,6 +47,15 @@ button:hover { background: rgba(52,88,232,0.08); }
       <div class="loading">Chargement...</div>
     </div>
   </div>
+
+  <h1>Cohérence interne &amp; validité de construit</h1>
+  <p class="subtitle">Consistance par axe (proxy, pas un Cronbach's alpha classique) et corrélations inter-axes — axes fortement corrélés = candidats à une redondance.</p>
+  <div class="card">
+    <button id="refreshQualityBtn" onclick="loadQualityReport()">Rafraîchir</button>
+    <div id="qualityContent" style="margin-top:16px;">
+      <div class="loading">Chargement...</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -103,7 +112,70 @@ function render(data) {
   content.innerHTML = html;
 }
 
+async function loadQualityReport() {
+  const content = document.getElementById('qualityContent');
+  content.innerHTML = '<div class="loading">Chargement...</div>';
+  try {
+    const r = await fetch(apiBase() + '/study/quality/report');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    renderQuality(data);
+  } catch (e) {
+    content.innerHTML = '<div class="error">Impossible de charger le rapport : ' + e.message + '</div>';
+  }
+}
+
+function renderQuality(data) {
+  const content = document.getElementById('qualityContent');
+  const axisIds = Object.keys(data.axes);
+
+  let html = `<div class="meta">${data.n_profiles} profil(s) · ${data.sample_caveat}</div>`;
+
+  if (!data.sample_sufficient) {
+    html += `<div class="notice warn">Échantillon insuffisant (${data.n_profiles}/${data.min_profiles_for_reliable_report} profils minimum) — chiffres indicatifs seulement.</div>`;
+  } else {
+    html += `<div class="notice ok">Échantillon suffisant (≥${data.min_profiles_for_reliable_report} profils) pour une lecture indicative.</div>`;
+  }
+
+  if (axisIds.length === 0) {
+    html += '<p style="color:var(--muted);font-size:0.9rem;">Aucun profil complet pour le moment.</p>';
+  } else {
+    html += '<h3 style="font-size:0.9rem;margin:16px 0 8px;">Cohérence interne par axe</h3>';
+    html += '<table><thead><tr><th>Axe</th><th>n</th><th>Consistance</th><th>Discrimination</th><th>Moyenne</th></tr></thead><tbody>';
+    for (const axisId of axisIds) {
+      const a = data.axes[axisId];
+      html += `<tr>
+        <td>${axisId}</td>
+        <td class="num">${a.n_profiles}</td>
+        <td class="num">${fmtNum(a.internal_consistency, 2)}</td>
+        <td class="num">${fmtNum(a.discrimination_index, 2)}</td>
+        <td class="num">${fmtNum(a.mean, 2)}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+
+    html += `<h3 style="font-size:0.9rem;margin:20px 0 8px;">Corrélations inter-axes (seuil redondance ≥ ${data.high_correlation_threshold})</h3>`;
+    if (data.correlations.length === 0) {
+      html += '<p style="color:var(--muted);font-size:0.9rem;">Pas assez de données pour calculer des corrélations.</p>';
+    } else {
+      html += '<table><thead><tr><th>Axe A</th><th>Axe B</th><th>Corrélation</th><th>Redondance ?</th></tr></thead><tbody>';
+      for (const c of data.correlations) {
+        html += `<tr>
+          <td>${c.axis_a}</td>
+          <td>${c.axis_b}</td>
+          <td class="num">${fmtNum(c.correlation, 2)}</td>
+          <td>${c.flagged_redundant ? '<span class="band band-faible">oui</span>' : '<span class="band band-excellente">non</span>'}</td>
+        </tr>`;
+      }
+      html += '</tbody></table>';
+    }
+  }
+
+  content.innerHTML = html;
+}
+
 loadReport();
+loadQualityReport();
 </script>
 </body>
 </html>

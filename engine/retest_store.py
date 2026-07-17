@@ -155,6 +155,20 @@ class RetestStore:
             ).fetchall()
             return [dict(r) for r in rows]
 
+    def all_complete_passages(self) -> list[dict]:
+        """Every complete passage, one row per passage (no pairing).
+
+        Feeds signal computation (internal consistency, inter-axis
+        correlation) — unlike `paired_first_two`, a single passage is a
+        usable data point here, so participants who never came back for a
+        second passage still count.
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM retest_passages WHERE is_complete = 1"
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     def paired_first_two(self) -> list[tuple[dict, dict]]:
         """(first, second) row pairs for every participant with >=2 complete passages.
 

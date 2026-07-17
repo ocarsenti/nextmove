@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from engine.retest_store import RetestStore, UnknownParticipantCode
 from engine.retest_analysis import compute_retest_report, _icc_1_1, _pearson
+from engine.quality_report import compute_quality_report
 from api.main import app, _questionnaire
 
 client = TestClient(app)
@@ -33,6 +34,22 @@ def _passage_kwargs(**overrides) -> dict:
     )
     kwargs.update(overrides)
     return kwargs
+
+
+def _full_axis_score(axis_id: str, raw_value: float, variance: float = 0.02) -> dict:
+    """A complete AxisScore-shaped dict — required for quality_report tests,
+    which reconstruct real AxisScore/Profile objects (unlike the retest
+    analysis tests above, which only read `raw_value` out of raw JSON)."""
+    return {
+        "axis_id": axis_id,
+        "raw_value": raw_value,
+        "confidence": 0.8,
+        "n_questions": 3,
+        "variance": variance,
+        "raw_answers": [raw_value],
+        "effective_weight": 1.0,
+        "status": "active",
+    }
 
 
 # ===================================================================
@@ -73,6 +90,16 @@ class TestRetestStore:
         first, second = pairs[0]
         assert first["passage_number"] == 1
         assert second["passage_number"] == 2
+
+    def test_all_complete_passages_counts_singles_and_pairs(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        store.save_passage(**_passage_kwargs(session_user_id="user-1"))  # single, no retest
+        code, _ = store.save_passage(**_passage_kwargs(session_user_id="user-2"))
+        store.save_passage(**_passage_kwargs(session_user_id="user-2", participant_code=code))
+        store.save_passage(**_passage_kwargs(session_user_id="user-3", is_complete=False))
+
+        rows = store.all_complete_passages()
+        assert len(rows) == 3  # 1 single + 2 from the pair; incomplete one excluded
 
 
 # ===================================================================
@@ -127,6 +154,73 @@ class TestRetestAnalysis:
 
 
 # ===================================================================
+# QUALITY REPORT (internal consistency + inter-axis correlation)
+# ===================================================================
+
+class TestQualityReport:
+    def test_empty_store_returns_empty_report(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        report = compute_quality_report(store)
+        assert report["n_profiles"] == 0
+        assert report["sample_sufficient"] is False
+        assert report["axes"] == {}
+        assert report["correlations"] == []
+
+    def test_single_passage_counts_as_one_profile_no_pair_needed(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        store.save_passage(**_passage_kwargs(
+            axis_scores={"autonomy": _full_axis_score("autonomy", 0.6)},
+        ))
+        report = compute_quality_report(store)
+        assert report["n_profiles"] == 1
+
+    def test_incomplete_passage_excluded(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        store.save_passage(**_passage_kwargs(
+            axis_scores={"autonomy": _full_axis_score("autonomy", 0.6)},
+            is_complete=False,
+        ))
+        report = compute_quality_report(store)
+        assert report["n_profiles"] == 0
+
+    def test_highly_correlated_axes_are_flagged(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        # autonomy and pace move in lockstep across profiles; rigor is constant
+        # (SignalComputer needs n>=3 profiles and non-zero variance to report r).
+        for i, (a, p) in enumerate([(0.1, 0.1), (0.5, 0.5), (0.9, 0.9)]):
+            store.save_passage(**_passage_kwargs(
+                session_user_id=f"user-{i}",
+                axis_scores={
+                    "autonomy": _full_axis_score("autonomy", a),
+                    "pace": _full_axis_score("pace", p),
+                    "rigor": _full_axis_score("rigor", 0.5 + i * 0.2),
+                },
+            ))
+        report = compute_quality_report(store)
+        assert report["n_profiles"] == 3
+
+        pair = {frozenset([c["axis_a"], c["axis_b"]]): c for c in report["correlations"]}
+        autonomy_pace = pair[frozenset(["autonomy", "pace"])]
+        assert autonomy_pace["correlation"] == pytest.approx(1.0, abs=1e-6)
+        assert autonomy_pace["flagged_redundant"] is True
+
+        # Every unordered pair appears exactly once, not twice (SignalSet
+        # stores both (a, b) and (b, a) internally).
+        assert len(report["correlations"]) == 3
+
+    def test_sample_sufficient_flag(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        for i in range(30):
+            store.save_passage(**_passage_kwargs(
+                session_user_id=f"user-{i}",
+                axis_scores={"autonomy": _full_axis_score("autonomy", 0.1 * (i % 10))},
+            ))
+        report = compute_quality_report(store)
+        assert report["n_profiles"] == 30
+        assert report["sample_sufficient"] is True
+
+
+# ===================================================================
 # API
 # ===================================================================
 
@@ -174,3 +268,15 @@ class TestRetestEndpoints:
         body = r.json()
         assert "n_pairs" in body
         assert "axes" in body
+
+    def test_quality_report_endpoint_returns_shape(self, monkeypatch, tmp_path):
+        import api.main as main_module
+
+        monkeypatch.setattr(main_module, "_retest_store", RetestStore(tmp_path / "retest.db"))
+
+        r = client.get("/study/quality/report")
+        assert r.status_code == 200
+        body = r.json()
+        assert "n_profiles" in body
+        assert "axes" in body
+        assert "correlations" in body

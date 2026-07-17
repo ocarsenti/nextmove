@@ -27,6 +27,7 @@ from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
 from engine.retest_store import RetestStore, UnknownParticipantCode
 from engine.retest_analysis import compute_retest_report
+from engine.quality_report import compute_quality_report
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
@@ -241,6 +242,17 @@ def retest_report():
     behind basic auth alongside the admin frontend page.
     """
     return compute_retest_report(_retest_store)
+
+
+@app.get("/study/quality/report")
+def quality_report():
+    """Internal consistency + inter-axis correlation, from opt-in study passages.
+
+    Answers methode.html's "Cohérence interne" and "Validité de construit"
+    rows — separate from /study/retest/report, which covers reproducibility.
+    Not exposed unauthenticated on the public domain, same as the retest report.
+    """
+    return compute_quality_report(_retest_store)
 
 
 # ===================================================================
