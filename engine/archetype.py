@@ -147,11 +147,11 @@ def compute_archetype_distribution(profile: Profile, registry: AxisRegistry) -> 
     low_confidence = scores[0].confidence < CONFIDENCE_FLOOR if scores[0].percentage > 0 else True
 
     if scores[0].percentage == 0:
-        summary = "Signal insuffisant sur tous les axes pertinents — aucun archétype dominant lisible."
+        summary = "Signal insuffisant sur tous les axes pertinents — aucun archétype préférentiel lisible."
     elif secondary:
-        summary = f"{dominant} dominant ({scores[0].percentage}%), avec une composante {secondary} ({scores[1].percentage}%)."
+        summary = f"Archétype préférentiel : {dominant} ({scores[0].percentage}%), avec une composante {secondary} ({scores[1].percentage}%)."
     else:
-        summary = f"{dominant} nettement dominant ({scores[0].percentage}%)."
+        summary = f"Archétype préférentiel : {dominant}, nettement dominant ({scores[0].percentage}%)."
     if scores[0].percentage > 0 and low_confidence:
         summary += " Confiance encore faible sur cette lecture — répondre à plus de questions l'affinera."
 

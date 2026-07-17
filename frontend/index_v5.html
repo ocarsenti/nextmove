@@ -221,14 +221,14 @@ textarea { min-height: 60px; resize: vertical; }
   <!-- STEP 1: ARCHETYPE -->
   <div class="step" id="step-1">
     <section class="card">
-      <h2>Ton profil dominant</h2>
+      <h2>Ton archétype préférentiel</h2>
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">Dérivé des 18 axes du questionnaire — se réajustera si le contexte d'un poste masque certains axes.</p>
       <div id="archetypeSummary" style="font-size:0.9rem;font-weight:600;margin-bottom:14px;"></div>
       <div id="archetypeBars"></div>
     </section>
 
     <section class="card share-section">
-      <h2>Partagez votre archétype</h2>
+      <h2>Partagez votre archétype préférentiel</h2>
       <p style="color:var(--muted);font-size:0.9rem;margin-bottom:20px;">Téléchargez votre badge ou ajoutez un anneau à votre photo LinkedIn.</p>
       <div class="share-tabs">
         <button class="share-tab active" id="tabBadge" onclick="switchTab('badge')">Badge</button>
@@ -741,23 +741,28 @@ function generateBadge(arch) {
     const imgW = 280, imgH = imgW * (img.height / img.width);
     ctx.drawImage(img, cx - imgW / 2, cy - imgH / 2, imgW, imgH);
 
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = 'bold 24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ARCHÉTYPE PRÉFÉRENTIEL', cx, cy + imgH / 2 + 20);
+
     ctx.fillStyle = ARCH_COLORS[primary.name];
     ctx.font = 'bold 72px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(primary.name.toUpperCase(), cx, cy + imgH / 2 + 80);
+    ctx.fillText(primary.name.toUpperCase(), cx, cy + imgH / 2 + 100);
 
     ctx.fillStyle = '#6b7280';
     ctx.font = '32px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(`${primary.percentage}%`, cx, cy + imgH / 2 + 120);
+    ctx.fillText(`${primary.percentage}%`, cx, cy + imgH / 2 + 140);
 
     ctx.fillStyle = '#374151';
     ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(ARCH_TAGLINES[primary.name], cx, cy + imgH / 2 + 175);
+    ctx.fillText(ARCH_TAGLINES[primary.name], cx, cy + imgH / 2 + 195);
 
     if (secondary) {
       ctx.fillStyle = '#6b7280';
       ctx.font = '24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText(`+ ${secondary.name} (${secondary.percentage}%)`, cx, cy + imgH / 2 + 215);
+      ctx.fillText(`+ ${secondary.name} (${secondary.percentage}%)`, cx, cy + imgH / 2 + 235);
     }
 
     ctx.fillStyle = '#9ca3af';
