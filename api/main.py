@@ -26,6 +26,7 @@ from engine.constraints import load_constraint_library, analyze_job
 from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
 from engine.retest_store import RetestStore, UnknownParticipantCode
+from engine.retest_analysis import compute_retest_report
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
@@ -230,6 +231,16 @@ def save_retest_passage(req: RetestSaveRequest):
         passage_number=passage_number,
         is_new_participant=req.participant_code is None,
     )
+
+
+@app.get("/study/retest/report")
+def retest_report():
+    """Per-axis test-retest reliability (ICC, Pearson r, tolerance-band agreement).
+
+    Not exposed unauthenticated on the public domain — nginx puts this path
+    behind basic auth alongside the admin frontend page.
+    """
+    return compute_retest_report(_retest_store)
 
 
 # ===================================================================

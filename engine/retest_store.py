@@ -154,3 +154,30 @@ class RetestStore:
                 (participant_code,),
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def paired_first_two(self) -> list[tuple[dict, dict]]:
+        """(first, second) row pairs for every participant with >=2 complete passages.
+
+        Uses the first two complete passages per code — later re-passages of
+        the same code (if any) are ignored, since the study measures one
+        test-retest interval per participant.
+        """
+        with self._connect() as conn:
+            codes = [
+                r["participant_code"]
+                for r in conn.execute(
+                    "SELECT participant_code FROM retest_passages "
+                    "WHERE is_complete = 1 "
+                    "GROUP BY participant_code HAVING COUNT(*) >= 2"
+                ).fetchall()
+            ]
+            pairs: list[tuple[dict, dict]] = []
+            for code in codes:
+                rows = conn.execute(
+                    "SELECT * FROM retest_passages WHERE participant_code = ? "
+                    "AND is_complete = 1 ORDER BY passage_number ASC LIMIT 2",
+                    (code,),
+                ).fetchall()
+                if len(rows) == 2:
+                    pairs.append((dict(rows[0]), dict(rows[1])))
+            return pairs
