@@ -56,6 +56,15 @@ button:hover { background: rgba(52,88,232,0.08); }
       <div class="loading">Chargement...</div>
     </div>
   </div>
+
+  <h1>Calibration du vocabulaire de signaux — extraction des postes</h1>
+  <p class="subtitle">Taux de déclenchement par signal sur les descriptions de postes réellement soumises via "Extraire les axes depuis la description" — voir <a href="/nextmove-v5/methode.html#validation-job">page méthode</a> pour le contexte.</p>
+  <div class="card">
+    <button id="refreshSignalsBtn" onclick="loadSignalCalibration()">Rafraîchir</button>
+    <div id="signalsContent" style="margin-top:16px;">
+      <div class="loading">Chargement...</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -177,6 +186,49 @@ function renderQuality(data) {
 
 loadReport();
 loadQualityReport();
+loadSignalCalibration();
+
+async function loadSignalCalibration() {
+  const content = document.getElementById('signalsContent');
+  content.innerHTML = '<div class="loading">Chargement...</div>';
+  try {
+    const r = await fetch(apiBase() + '/study/job-signals/calibration-report');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    renderSignalCalibration(data);
+  } catch (e) {
+    content.innerHTML = '<div class="error">Impossible de charger le rapport : ' + e.message + '</div>';
+  }
+}
+
+function renderSignalCalibration(data) {
+  const content = document.getElementById('signalsContent');
+  const signalIds = Object.keys(data.signals);
+
+  let html = `<div class="meta">${data.n_extractions} extraction(s) journalisée(s)</div>`;
+
+  if (!data.sample_sufficient) {
+    html += `<div class="notice warn">Échantillon insuffisant (${data.n_extractions}/${data.min_for_reliable_calibration} extractions minimum) — colle des descriptions de postes réelles via le bouton "Extraire les axes depuis la description" pour accumuler des données.</div>`;
+  } else {
+    html += `<div class="notice ok">Échantillon suffisant (≥${data.min_for_reliable_calibration} extractions) pour une lecture indicative.</div>`;
+  }
+
+  html += '<table><thead><tr><th>Signal</th><th>Libellé</th><th>Déclenchements</th><th>Taux</th><th>Jamais ?</th><th>Toujours ?</th></tr></thead><tbody>';
+  for (const sigId of signalIds) {
+    const s = data.signals[sigId];
+    html += `<tr>
+      <td><code>${sigId}</code></td>
+      <td>${s.label}</td>
+      <td class="num">${s.n_fired}</td>
+      <td class="num">${fmtPct(s.firing_rate)}</td>
+      <td>${s.flagged_never_fires ? '<span class="band band-faible">oui</span>' : '<span class="band band-excellente">non</span>'}</td>
+      <td>${s.flagged_always_fires ? '<span class="band band-faible">oui</span>' : '<span class="band band-excellente">non</span>'}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+
+  content.innerHTML = html;
+}
 </script>
 </body>
 </html>
