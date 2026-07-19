@@ -27,6 +27,8 @@ from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
 from research import job_extraction_log
 from research.job_extraction_validation import calibrate_signal_vocabulary
+from research import job_annotation_store
+from research.job_annotation_agreement import score_agreement
 from engine.retest_store import RetestStore, UnknownParticipantCode
 from engine.retest_analysis import compute_retest_report
 from engine.quality_report import compute_quality_report
@@ -40,6 +42,7 @@ from api.models import (
     JobExtractRequest, JobExtractResponse,
     RetestSaveRequest, RetestSaveResponse,
     RetestWithdrawRequest, RetestWithdrawResponse,
+    JobSignalListResponse, JobAnnotationRequest, JobAnnotationResponse,
 )
 
 app = FastAPI(
@@ -72,6 +75,7 @@ _job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no 
 _constraint_library = load_constraint_library()
 _retest_store = RetestStore()
 job_extraction_log.init_db()
+job_annotation_store.init_db()
 
 
 # ===================================================================
@@ -270,6 +274,49 @@ def job_signal_calibration_report():
     library = load_signal_library()
     logged = job_extraction_log.all_extractions()
     return calibrate_signal_vocabulary(logged, library)
+
+
+@app.get("/job-signals", response_model=JobSignalListResponse)
+def list_job_signals():
+    """The full closed signal vocabulary (id + label) — for building an
+    annotation UI without duplicating the list by hand."""
+    library = load_signal_library()
+    return JobSignalListResponse(signals=[{"id": s.id, "label": s.label} for s in library])
+
+
+@app.post("/study/job-signals/annotate", response_model=JobAnnotationResponse)
+def annotate_job_signals(req: JobAnnotationRequest):
+    """Save a BLIND human annotation — the caller must not have seen the
+    LLM's own detection for this description before submitting (see
+    research/job_annotation_store.py). No LLM call happens here; the
+    comparison happens later in /study/job-signals/agreement-report."""
+    library_ids = {s.id for s in load_signal_library()}
+    unknown = set(req.human_signal_ids) - library_ids
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"Unknown signal_id(s): {sorted(unknown)}")
+    annotation_id = job_annotation_store.save_annotation(
+        req.description, req.human_signal_ids, req.annotator_note
+    )
+    return JobAnnotationResponse(
+        annotation_id=annotation_id,
+        n_total_annotations=len(job_annotation_store.all_annotations()),
+    )
+
+
+@app.get("/study/job-signals/agreement-report")
+def job_signal_agreement_report():
+    """Runs the LLM extraction NOW on every stored blind annotation's
+    description, and scores agreement (precision/recall per signal) against
+    the human annotation — see research/job_annotation_agreement.py. This is
+    the one report in the whole job-side protocol that makes real LLM calls
+    (one per annotation), so it needs ANTHROPIC_API_KEY configured.
+    """
+    library = load_signal_library()
+    annotations = job_annotation_store.all_annotations()
+    try:
+        return score_agreement(annotations, library)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
 
 # ===================================================================

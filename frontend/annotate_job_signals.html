@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXTMOVE — Annotation manuelle des signaux</title>
+<style>
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --surface: #f1f2f5; --border: #e1e4ea;
+  --text: #16181d; --muted: #6b7280; --accent: #3458e8; --accent-hover: #2543c0;
+  --accent-dim: rgba(52,88,232,0.08); --low: #1d9a5b; --medium: #c2780a; --high: #dc3545;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+.container { max-width: 760px; margin: 0 auto; padding: 28px 24px 60px; }
+h1 { font-size: 1.4rem; margin-bottom: 4px; }
+.subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+.warn-box { background: #fdf0e0; border: 1px solid var(--medium); color: #6b5219; border-radius: 8px; padding: 12px 14px; font-size: 0.85rem; margin-bottom: 20px; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; }
+label.field-label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+textarea { width: 100%; min-height: 160px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; font-family: inherit; resize: vertical; }
+input[type="text"] { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.9rem; font-family: inherit; }
+.signal-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.signal-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--surface); cursor: pointer; }
+.signal-row:hover { background: var(--accent-dim); }
+.signal-row input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.signal-row .label { font-size: 0.88rem; }
+.signal-row code { font-size: 0.72rem; color: var(--muted); display: block; margin-top: 2px; }
+.btn { padding: 10px 22px; border: none; background: var(--accent); color: white; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.btn:hover { background: var(--accent-hover); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.status { font-size: 0.85rem; margin-top: 10px; }
+.status.ok { color: var(--low); }
+.status.error { color: var(--high); }
+.counter { font-size: 0.82rem; color: var(--muted); margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Annotation manuelle des signaux</h1>
+  <p class="subtitle">Codage à l'aveugle, pour comparer plus tard à ce que le LLM détecte — voir <a href="/nextmove-v5/methode.html#validation-job">page méthode</a>.</p>
+
+  <div class="warn-box">
+    <strong>Lis le texte et coche les signaux que TU y vois, avant toute autre chose.</strong> Cette page n'appelle jamais le LLM pendant l'annotation — la comparaison se fait plus tard, séparément, pour que ton jugement reste indépendant. Idéalement, cette annotation est faite par quelqu'un qui n'a pas conçu le vocabulaire des signaux (le biais est difficile à éviter si c'est toi qui l'as écrit).
+  </div>
+
+  <div class="card">
+    <label class="field-label">Description du poste (colle le texte complet)</label>
+    <textarea id="descriptionInput" placeholder="Colle ici une vraie description de poste..."></textarea>
+
+    <label class="field-label" style="margin-top:16px;">Signaux détectés à la lecture</label>
+    <div id="signalGrid" class="signal-grid">
+      <p style="color:var(--muted);font-size:0.85rem;">Chargement du vocabulaire de signaux...</p>
+    </div>
+
+    <label class="field-label" style="margin-top:16px;">Note (optionnel — ex. ton nom, le secteur du poste)</label>
+    <input type="text" id="noteInput" placeholder="ex. annoté par Camille, poste tech">
+
+    <div style="margin-top:18px;">
+      <button class="btn" id="submitBtn">Enregistrer cette annotation</button>
+    </div>
+    <div id="statusMsg" class="status"></div>
+    <div id="counterMsg" class="counter"></div>
+  </div>
+</div>
+
+<script>
+function apiBase() { return '/nextmove-v5-api'; }
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function loadSignals() {
+  const grid = document.getElementById('signalGrid');
+  try {
+    const r = await fetch(apiBase() + '/job-signals');
+    const data = await r.json();
+    grid.innerHTML = '';
+    data.signals.forEach(s => {
+      const row = document.createElement('label');
+      row.className = 'signal-row';
+      row.innerHTML = `<input type="checkbox" value="${esc(s.id)}">
+        <span><span class="label">${esc(s.label)}</span><code>${esc(s.id)}</code></span>`;
+      grid.appendChild(row);
+    });
+  } catch (e) {
+    grid.innerHTML = '<p style="color:var(--high);font-size:0.85rem;">Impossible de charger les signaux — vérifie que l\'API est joignable.</p>';
+  }
+}
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const description = document.getElementById('descriptionInput').value.trim();
+  const note = document.getElementById('noteInput').value.trim();
+  const checked = Array.from(document.querySelectorAll('#signalGrid input[type=checkbox]:checked')).map(i => i.value);
+  const statusMsg = document.getElementById('statusMsg');
+  const btn = document.getElementById('submitBtn');
+
+  if (!description) {
+    statusMsg.className = 'status error';
+    statusMsg.textContent = 'Colle une description de poste avant d\'enregistrer.';
+    return;
+  }
+
+  btn.disabled = true;
+  statusMsg.className = 'status';
+  statusMsg.textContent = 'Enregistrement...';
+
+  try {
+    const r = await fetch(apiBase() + '/study/job-signals/annotate', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ description, human_signal_ids: checked, annotator_note: note }),
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    statusMsg.className = 'status ok';
+    statusMsg.textContent = 'Annotation enregistrée.';
+    document.getElementById('counterMsg').textContent = `${data.n_total_annotations} annotation(s) au total dans l'échantillon.`;
+    document.getElementById('descriptionInput').value = '';
+    document.getElementById('noteInput').value = '';
+    document.querySelectorAll('#signalGrid input[type=checkbox]').forEach(i => i.checked = false);
+  } catch (e) {
+    statusMsg.className = 'status error';
+    statusMsg.textContent = 'Erreur à l\'enregistrement : ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+loadSignals();
+</script>
+</body>
+</html>

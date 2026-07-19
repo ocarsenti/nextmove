@@ -5,6 +5,7 @@ __pycache__/
 data/profiles/
 data/retest/
 data/job_extraction_log.db
+data/job_annotations.db
 venv/
 *.log
 htmlcov/

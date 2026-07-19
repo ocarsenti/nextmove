@@ -135,3 +135,22 @@ class RetestWithdrawRequest(BaseModel):
 
 class RetestWithdrawResponse(BaseModel):
     deleted_passages: int
+
+
+# ===================================================================
+# JOB SIGNAL ANNOTATION — human-vs-LLM agreement (criterion validity)
+# ===================================================================
+
+class JobSignalListResponse(BaseModel):
+    signals: list[dict]   # [{id, label}]
+
+
+class JobAnnotationRequest(BaseModel):
+    description: str
+    human_signal_ids: list[str]
+    annotator_note: str = ""
+
+
+class JobAnnotationResponse(BaseModel):
+    annotation_id: int
+    n_total_annotations: int
