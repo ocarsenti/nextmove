@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 import anthropic
@@ -77,6 +78,17 @@ If no signal applies, return {{"signals": []}}.
 """
 
 
+def _normalize(text: str) -> str:
+    """Same normalization discipline used elsewhere in this project's citation
+    checks (EvidenceAble's has_vs_moteur.py, the Poppins PECAN citation
+    verification): join line-wrap hyphenation, fold curly quotes to
+    straight, collapse whitespace — so a genuine verbatim match isn't
+    rejected on formatting noise, while a fabricated phrase still fails."""
+    text = re.sub(r"-\s*\n\s*", "", text)
+    text = text.replace("\u2019", "'").replace("\u2018", "'")
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def extract_signals(description: str, library: list[JobSignal]) -> list[DetectedSignal]:
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
@@ -103,13 +115,20 @@ def extract_signals(description: str, library: list[JobSignal]) -> list[Detected
         raw_text = raw_text.strip()
 
     parsed = _SignalExtractionOutput.model_validate_json(raw_text)
-    # Defensive: drop anything outside the fixed vocabulary rather than trust
-    # the model never hallucinates an id — this is exactly the guardrail the
-    # closed-vocabulary design is meant to provide.
+    description_norm = _normalize(description)
+
+    # Defensive, two checks: (1) drop anything outside the fixed vocabulary
+    # rather than trust the model never hallucinates an id — the guardrail
+    # the closed-vocabulary design is meant to provide; (2) drop anything
+    # whose source_phrase isn't an actual verbatim substring of the input —
+    # the LLM is asked to quote, but asking isn't verifying. A plausible-
+    # sounding but fabricated "citation" is exactly the failure mode this
+    # whole extraction design exists to prevent, so it must be checked
+    # programmatically, not trusted on the model's word.
     return [
         DetectedSignal(signal_id=p.signal_id, source_phrase=p.source_phrase)
         for p in parsed.signals
-        if p.signal_id in valid_ids
+        if p.signal_id in valid_ids and _normalize(p.source_phrase) in description_norm
     ]
 
 

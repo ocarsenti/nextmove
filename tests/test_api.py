@@ -232,7 +232,7 @@ class TestJobExtractEndpoint:
 
         class _FakeContentBlock:
             text = (
-                '{"signals": [{"signal_id": "%s", "source_phrase": "quoted text"}]}'
+                '{"signals": [{"signal_id": "%s", "source_phrase": "Any description"}]}'
                 % first_signal.id
             )
 

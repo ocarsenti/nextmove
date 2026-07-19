@@ -1,20 +1,24 @@
-"""Tests for engine/job_extraction.py — the signals -> axes deterministic layer.
+"""Tests for engine/job_extraction.py — the signals -> axes deterministic layer,
+plus mocked-LLM tests for extract_signals()'s citation verification.
 
-extract_signals() itself needs a live ANTHROPIC_API_KEY (LLM call) and is not
-exercised here — same boundary as the rest of the codebase (no LLM calls in
-the test suite). What's fully testable, and tested, is everything downstream
-of a signal list: the closed vocabulary's integrity and the deterministic
-aggregation rule.
+extract_signals() needs ANTHROPIC_API_KEY to make a real call — same boundary
+as the rest of the codebase, so real calls aren't exercised here. But the
+citation-verification logic around the call (does source_phrase actually
+appear in the input text) is pure post-processing and fully testable with a
+mocked Anthropic client — see TestCitationVerification.
 """
+import json
+import os
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ontology.models import DetectedSignal
 from ontology.registry import AxisRegistry
-from engine.job_extraction import load_signal_library, signals_to_axes
+from engine.job_extraction import load_signal_library, signals_to_axes, extract_signals
 
 
 class TestSignalLibrary(unittest.TestCase):
@@ -101,6 +105,65 @@ class TestSignalsToAxes(unittest.TestCase):
         result = signals_to_axes(detected, self.library)
         self.assertIn("cognitive_structuring", result)   # from cadre_reglementaire
         self.assertIn("exploration", result)              # from innovation_produit
+
+
+class TestCitationVerification(unittest.TestCase):
+    """extract_signals() must not trust the LLM's source_phrase on its word —
+    it's asked to quote verbatim, but only a programmatic substring check
+    actually confirms it did."""
+
+    def setUp(self):
+        os.environ["ANTHROPIC_API_KEY"] = "fake-key-for-test"
+        self.library = load_signal_library()
+        self.description = "Vous pilotez des projets innovants dans un environnement réglementé."
+
+    def _mock_response(self, signals_json: str):
+        resp = MagicMock()
+        resp.content = [MagicMock(text=signals_json)]
+        return resp
+
+    def test_genuine_verbatim_citation_is_kept(self):
+        payload = json.dumps({"signals": [
+            {"signal_id": "innovation_produit", "source_phrase": "projets innovants"},
+        ]})
+        with patch("engine.job_extraction.Anthropic") as MockClient:
+            MockClient.return_value.messages.create.return_value = self._mock_response(payload)
+            detected = extract_signals(self.description, self.library)
+        self.assertEqual(len(detected), 1)
+        self.assertEqual(detected[0].signal_id, "innovation_produit")
+
+    def test_fabricated_citation_not_in_source_text_is_dropped(self):
+        payload = json.dumps({"signals": [
+            {"signal_id": "innovation_produit", "source_phrase": "une phrase qui n'existe pas dans le texte"},
+        ]})
+        with patch("engine.job_extraction.Anthropic") as MockClient:
+            MockClient.return_value.messages.create.return_value = self._mock_response(payload)
+            detected = extract_signals(self.description, self.library)
+        self.assertEqual(detected, [])
+
+    def test_citation_with_curly_quotes_and_linewrap_still_verifies(self):
+        # Same normalization discipline as EvidenceAble's citation checks:
+        # a genuine match shouldn't fail on typographic quote style or a
+        # hyphenation line-wrap artifact.
+        description = "L'environnement est très r\u00e9glement\u00e9 et l'\u00e9quipe pilote des projets innovants."
+        payload = json.dumps({"signals": [
+            {"signal_id": "cadre_reglementaire", "source_phrase": "tr\u00e8s r\u00e9glement\u00e9"},
+        ]})
+        with patch("engine.job_extraction.Anthropic") as MockClient:
+            MockClient.return_value.messages.create.return_value = self._mock_response(payload)
+            detected = extract_signals(description, self.library)
+        self.assertEqual(len(detected), 1)
+
+    def test_mixed_genuine_and_fabricated_keeps_only_genuine(self):
+        payload = json.dumps({"signals": [
+            {"signal_id": "innovation_produit", "source_phrase": "projets innovants"},
+            {"signal_id": "cadre_reglementaire", "source_phrase": "texte totalement inventé"},
+        ]})
+        with patch("engine.job_extraction.Anthropic") as MockClient:
+            MockClient.return_value.messages.create.return_value = self._mock_response(payload)
+            detected = extract_signals(self.description, self.library)
+        self.assertEqual(len(detected), 1)
+        self.assertEqual(detected[0].signal_id, "innovation_produit")
 
 
 if __name__ == "__main__":
