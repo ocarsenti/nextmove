@@ -25,6 +25,8 @@ from engine.archetype import compute_archetype_distribution
 from engine.constraints import load_constraint_library, analyze_job
 from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
+from research import job_extraction_log
+from research.job_extraction_validation import calibrate_signal_vocabulary
 from engine.retest_store import RetestStore, UnknownParticipantCode
 from engine.retest_analysis import compute_retest_report
 from engine.quality_report import compute_quality_report
@@ -69,6 +71,7 @@ _transformation_engine = TransformationEngine(_registry, _audit_log)
 _job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no persistence layer yet)
 _constraint_library = load_constraint_library()
 _retest_store = RetestStore()
+job_extraction_log.init_db()
 
 
 # ===================================================================
@@ -256,6 +259,19 @@ def quality_report():
     return compute_quality_report(_retest_store, _bank, _registry)
 
 
+@app.get("/study/job-signals/calibration-report")
+def job_signal_calibration_report():
+    """Per-signal firing rate across every /jobs/extract call logged so far
+    (see research/job_extraction_log.py). A signal that never fires or fires
+    on nearly everything is flagged for review — same logic as the axis-side
+    flagged_low_discrimination in /study/quality/report, one layer earlier
+    in the pipeline (the signal vocabulary, not the axes it maps to).
+    """
+    library = load_signal_library()
+    logged = job_extraction_log.all_extractions()
+    return calibrate_signal_vocabulary(logged, library)
+
+
 # ===================================================================
 # JOB CARDS
 # ===================================================================
@@ -278,6 +294,13 @@ def extract_job(req: JobExtractRequest):
         axis_requirements = signals_to_axes(detected, signal_library)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
+
+    try:
+        job_extraction_log.log_extraction(
+            req.description, [d.signal_id for d in detected], axis_requirements
+        )
+    except Exception:
+        pass  # calibration logging is best-effort — never blocks the actual extraction
 
     labels = {s.id: s.label for s in signal_library}
     return JobExtractResponse(

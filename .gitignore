@@ -4,6 +4,7 @@ __pycache__/
 .env
 data/profiles/
 data/retest/
+data/job_extraction_log.db
 venv/
 *.log
 htmlcov/

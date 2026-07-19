@@ -92,6 +92,7 @@ footer.page-footer a { color: var(--accent); text-decoration: none; }
       <li><a href="#quest-ce-que-cest">Ce que NextMove est / n'est pas</a></li>
       <li><a href="#comment-ca-marche">Comment ça fonctionne</a></li>
       <li><a href="#validation">État de la validation scientifique</a></li>
+      <li><a href="#validation-job">État de la validation — extraction des postes</a></li>
       <li><a href="#limites">Limites explicites</a></li>
       <li><a href="#archetype">À propos de l'archétype préférentiel</a></li>
       <li><a href="#donnees">Utilisation des données</a></li>
@@ -135,6 +136,36 @@ footer.page-footer a { color: var(--accent); text-decoration: none; }
     <div class="evidence-box pending">
       <div class="label">Validité prédictive (un bon alignement prédit-il un meilleur résultat réel en poste ?)</div>
       <p>Non étudiée, et non revendiquée. NextMove n'affirme pas qu'un score élevé améliore vos chances de réussite dans un poste.</p>
+    </div>
+  </section>
+
+  <section class="card" id="validation-job">
+    <h2><span class="num">3bis</span>État de la validation — extraction des postes</h2>
+    <p>Distinct de ce qui précède : quand une description de poste est collée dans l'outil, un modèle de langage identifie des signaux dans le texte pour en dériver un niveau par dimension. Valider cette étape-là pose des questions différentes de celles d'un questionnaire répondu par une personne.</p>
+
+    <div class="evidence-box done">
+      <div class="label">Citations vérifiables (chaque signal cite-t-il vraiment une phrase présente dans le texte ?)</div>
+      <p>Vérifié programmatiquement, pas seulement demandé au modèle — un signal dont la citation n'est pas retrouvée mot pour mot dans le texte source est rejeté avant même d'atteindre le calcul des dimensions.</p>
+    </div>
+
+    <div class="evidence-box pending">
+      <div class="label">Calibration du vocabulaire de signaux (chaque signal se déclenche-t-il de façon pertinente, ni jamais ni systématiquement ?)</div>
+      <p>Pas encore mesurée sur un échantillon suffisant de descriptions réelles — nécessite au moins 30 extractions journalisées pour un premier chiffre exploitable.</p>
+    </div>
+
+    <div class="evidence-box pending">
+      <div class="label">Reproductibilité de l'extraction (le même texte, soumis plusieurs fois, donne-t-il le même résultat ?)</div>
+      <p>Pas encore mesurée en conditions réelles. Le modèle est appelé à température nulle, ce qui favorise la stabilité sans la garantir strictement.</p>
+    </div>
+
+    <div class="evidence-box pending">
+      <div class="label">Robustesse au reformulation (une même offre, réécrite différemment sans changer de sens, donne-t-elle un résultat comparable ?)</div>
+      <p>Pas encore mesurée — nécessite un corpus de reformulations écrites par une personne, pas générées par le même modèle que celui qui extrait ensuite les signaux.</p>
+    </div>
+
+    <div class="evidence-box pending">
+      <div class="label">Accord avec un codage humain indépendant (un expert qui lirait la même offre coderait-il les mêmes signaux ?)</div>
+      <p>Pas encore mesurée — nécessite qu'une personne annote manuellement un échantillon de descriptions de postes, indépendamment de l'outil.</p>
     </div>
   </section>
 
