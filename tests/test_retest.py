@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from engine.retest_store import RetestStore, UnknownParticipantCode
 from engine.retest_analysis import compute_retest_report, _icc_1_1, _pearson
-from engine.quality_report import compute_quality_report
+from engine.quality_report import compute_quality_report, LOW_DISCRIMINATION_THRESHOLD
 from api.main import app, _questionnaire, _bank, _registry
 
 client = TestClient(app)
@@ -224,6 +224,46 @@ class TestQualityReport:
         # Every unordered pair appears exactly once, not twice (SignalSet
         # stores both (a, b) and (b, a) internally).
         assert len(report["correlations"]) == 3
+
+    def test_low_discriminating_axis_is_flagged_above_sample_floor(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        # 30 profiles (the reliable-report floor), everyone answers "rigor"
+        # almost identically — barely separates anyone.
+        for i in range(30):
+            store.save_passage(**_passage_kwargs(
+                session_user_id=f"user-{i}",
+                axis_scores={"rigor": _full_axis_score("rigor", 0.5 + (i % 2) * 0.01)},
+            ))
+        report = compute_quality_report(store, _bank, _registry)
+        assert report["axes"]["rigor"]["flagged_low_discrimination"] is True
+
+    def test_well_discriminating_axis_is_not_flagged(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        # 30 profiles spread across the full 0-1 range — discriminates well.
+        for i in range(30):
+            store.save_passage(**_passage_kwargs(
+                session_user_id=f"user-{i}",
+                axis_scores={"rigor": _full_axis_score("rigor", i / 29)},
+            ))
+        report = compute_quality_report(store, _bank, _registry)
+        assert report["axes"]["rigor"]["flagged_low_discrimination"] is False
+
+    def test_low_discrimination_not_flagged_below_sample_floor(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        # Same near-identical answers as the flagged case, but only 5 profiles
+        # — too few to act on, must not be flagged regardless of the raw index.
+        for i in range(5):
+            store.save_passage(**_passage_kwargs(
+                session_user_id=f"user-{i}",
+                axis_scores={"rigor": _full_axis_score("rigor", 0.5 + (i % 2) * 0.01)},
+            ))
+        report = compute_quality_report(store, _bank, _registry)
+        assert report["axes"]["rigor"]["flagged_low_discrimination"] is False
+
+    def test_low_discrimination_threshold_exposed_in_report(self, tmp_path):
+        store = RetestStore(tmp_path / "retest.db")
+        report = compute_quality_report(store, _bank, _registry)
+        assert report["low_discrimination_threshold"] == LOW_DISCRIMINATION_THRESHOLD
 
     def test_sample_sufficient_flag(self, tmp_path):
         store = RetestStore(tmp_path / "retest.db")

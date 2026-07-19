@@ -140,8 +140,8 @@ function renderQuality(data) {
   if (axisIds.length === 0) {
     html += '<p style="color:var(--muted);font-size:0.9rem;">Aucun profil complet pour le moment.</p>';
   } else {
-    html += '<h3 style="font-size:0.9rem;margin:16px 0 8px;">Cohérence interne par axe</h3>';
-    html += '<table><thead><tr><th>Axe</th><th>n</th><th>Consistance</th><th>Discrimination</th><th>Moyenne</th></tr></thead><tbody>';
+    html += `<h3 style="font-size:0.9rem;margin:16px 0 8px;">Cohérence interne par axe (seuil scission &lt; ${data.low_discrimination_threshold})</h3>`;
+    html += '<table><thead><tr><th>Axe</th><th>n</th><th>Consistance</th><th>Discrimination</th><th>Moyenne</th><th>Scission ?</th></tr></thead><tbody>';
     for (const axisId of axisIds) {
       const a = data.axes[axisId];
       html += `<tr>
@@ -150,6 +150,7 @@ function renderQuality(data) {
         <td class="num">${fmtNum(a.internal_consistency, 2)}</td>
         <td class="num">${fmtNum(a.discrimination_index, 2)}</td>
         <td class="num">${fmtNum(a.mean, 2)}</td>
+        <td>${a.flagged_low_discrimination ? '<span class="band band-faible">oui</span>' : '<span class="band band-excellente">non</span>'}</td>
       </tr>`;
     }
     html += '</tbody></table>';
