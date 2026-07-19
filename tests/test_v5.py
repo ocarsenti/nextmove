@@ -27,6 +27,24 @@ def _build_full_answers(bank: QuestionBank, score_value: str = "B") -> dict[str,
     return {qid: score_value for qid in base}
 
 
+def _build_full_answers_at_score(bank: QuestionBank, target_score: float) -> dict[str, str]:
+    """Like _build_full_answers, but selects — per question — whichever
+    option actually carries `target_score`, not a fixed letter. Needed for
+    any test asserting a specific resulting raw_value/direction: the bank
+    deliberately varies which letter carries which score per question (no
+    more fixed A=low/B=mid/C=high), so a fixed-letter answer set no longer
+    reliably produces a uniform score across axes."""
+    registry = AxisRegistry()
+    questionnaire = AdaptiveQuestionnaire(registry, bank)
+    base = questionnaire.initial_sequence()
+    answers = {}
+    for qid in base:
+        q = bank.get(qid)
+        opt = next(o for o in q.options if o.score == target_score)
+        answers[qid] = opt.value
+    return answers
+
+
 # ===================================================================
 # T1 — Registry
 # ===================================================================
@@ -311,26 +329,26 @@ class TestScorer(unittest.TestCase):
         c_high_var = _confidence(3, 0.3)
         self.assertGreater(c_low_var, c_high_var)
 
-    def test_scores_all_b_answers(self):
-        answers = _build_full_answers(self.bank, "B")
+    def test_scores_all_mid_answers(self):
+        answers = _build_full_answers_at_score(self.bank, 0.5)
         profile = self.scorer.score("user1", answers)
         for ax_id, score in profile.axis_scores.items():
             self.assertAlmostEqual(score.raw_value, 0.5, places=1,
-                                   msg=f"{ax_id} should be ~0.5 for all B answers")
+                                   msg=f"{ax_id} should be ~0.5 for all-mid-score answers")
 
-    def test_scores_all_a_answers(self):
-        answers = _build_full_answers(self.bank, "A")
+    def test_scores_all_min_answers(self):
+        answers = _build_full_answers_at_score(self.bank, 0.0)
         profile = self.scorer.score("user1", answers)
         for ax_id, score in profile.axis_scores.items():
             self.assertAlmostEqual(score.raw_value, 0.0, places=1,
-                                   msg=f"{ax_id} should be ~0.0 for all A answers")
+                                   msg=f"{ax_id} should be ~0.0 for all-min-score answers")
 
-    def test_scores_all_c_answers(self):
-        answers = _build_full_answers(self.bank, "C")
+    def test_scores_all_max_answers(self):
+        answers = _build_full_answers_at_score(self.bank, 1.0)
         profile = self.scorer.score("user1", answers)
         for ax_id, score in profile.axis_scores.items():
             self.assertAlmostEqual(score.raw_value, 1.0, places=1,
-                                   msg=f"{ax_id} should be ~1.0 for all C answers")
+                                   msg=f"{ax_id} should be ~1.0 for all-max-score answers")
 
     def test_profile_has_all_active_axes(self):
         answers = _build_full_answers(self.bank, "B")
@@ -577,17 +595,19 @@ class TestIntegration(unittest.TestCase):
         public_aw = profile_public.axis_scores["autonomy"].effective_weight
         self.assertGreater(startup_aw, public_aw)
 
-    def test_high_C_profile_has_high_raw_values(self):
-        profile, _, _ = self._run_pipeline("C")
+    def test_high_max_profile_has_high_raw_values(self):
+        answers = _build_full_answers_at_score(self.bank, 1.0)
+        profile = self.scorer.score("integration_test", answers, None)
         for ax_id, score in profile.axis_scores.items():
             self.assertGreaterEqual(score.raw_value, 0.8,
-                                    f"{ax_id} raw_value too low for all-C answers")
+                                    f"{ax_id} raw_value too low for all-max-score answers")
 
-    def test_low_A_profile_has_low_raw_values(self):
-        profile, _, _ = self._run_pipeline("A")
+    def test_low_min_profile_has_low_raw_values(self):
+        answers = _build_full_answers_at_score(self.bank, 0.0)
+        profile = self.scorer.score("integration_test", answers, None)
         for ax_id, score in profile.axis_scores.items():
             self.assertLessEqual(score.raw_value, 0.2,
-                                 f"{ax_id} raw_value too high for all-A answers")
+                                 f"{ax_id} raw_value too high for all-min-score answers")
 
     def test_weighted_scores_respect_context(self):
         """In startup context, autonomy weighted score > public sector autonomy weighted score."""

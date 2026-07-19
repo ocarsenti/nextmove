@@ -35,24 +35,41 @@ def engine_setup():
 
 @pytest.mark.golden
 class TestGoldenUniformAnswers:
-    """All base questions answered identically — simplest possible fixture."""
+    """All base questions answered at the same score level — simplest
+    possible fixture. Selects the option by SCORE, not by letter: since
+    the question bank deliberately varies which letter carries which
+    score (no more fixed A=low/B=mid/C=high — see ontology/questions_seed.json
+    revision), a fixture that answered "A everywhere" would no longer
+    mean anything uniform. Answering "the lowest-scoring option on every
+    question" is the invariant actually worth testing."""
 
-    def test_all_A_profile_is_floor(self, engine_setup):
+    def _answers_at_score(self, bank, base: list[str], target_score: float) -> dict[str, str]:
+        answers = {}
+        for qid in base:
+            q = bank.get(qid)
+            opt = next(o for o in q.options if o.score == pytest.approx(target_score))
+            answers[qid] = opt.value
+        return answers
+
+    def test_all_min_profile_is_floor(self, engine_setup):
         registry, scorer, base = engine_setup
-        profile = scorer.score("golden_all_A", {qid: "A" for qid in base}, None)
+        bank = QuestionBank()
+        profile = scorer.score("golden_all_min", self._answers_at_score(bank, base, 0.0), None)
         weighted = scorer.weighted_profile(profile)
         assert profile.is_complete is True
         assert all(v == pytest.approx(0.0) for v in weighted.values())
 
-    def test_all_C_profile_is_ceiling(self, engine_setup):
+    def test_all_max_profile_is_ceiling(self, engine_setup):
         registry, scorer, base = engine_setup
-        profile = scorer.score("golden_all_C", {qid: "C" for qid in base}, None)
+        bank = QuestionBank()
+        profile = scorer.score("golden_all_max", self._answers_at_score(bank, base, 1.0), None)
         weighted = scorer.weighted_profile(profile)
         assert all(v == pytest.approx(1.0) for v in weighted.values())
 
-    def test_all_B_profile_is_midpoint_and_ties_on_archetype(self, engine_setup):
+    def test_all_mid_profile_is_midpoint_and_ties_on_archetype(self, engine_setup):
         registry, scorer, base = engine_setup
-        profile = scorer.score("golden_all_B", {qid: "B" for qid in base}, None)
+        bank = QuestionBank()
+        profile = scorer.score("golden_all_mid", self._answers_at_score(bank, base, 0.5), None)
         weighted = scorer.weighted_profile(profile)
         assert all(v == pytest.approx(0.5) for v in weighted.values())
 
@@ -71,24 +88,24 @@ class TestGoldenMixedPattern:
     weighting and per-axis variance rather than a single flat value."""
 
     EXPECTED_WEIGHTED = {
-        "ambiguity_tolerance": 0.6667,
-        "autonomy": 0.3333,
-        "behavioral_stability": 0.5,
-        "cognitive_flexibility": 0.5,
-        "cognitive_granularity": 0.3333,
-        "cognitive_structuring": 0.3333,
-        "context_sensitivity": 1.0,
-        "decision_speed": 0.8333,
-        "direction": 0.3333,
+        "ambiguity_tolerance": 1.0,
+        "autonomy": 0.6667,
+        "behavioral_stability": 0.8333,
+        "cognitive_flexibility": 0.3333,
+        "cognitive_granularity": 0.5,
+        "cognitive_structuring": 0.5,
+        "context_sensitivity": 0.5,
+        "decision_speed": 0.3333,
+        "direction": 0.6667,
         "exploration": 0.3333,
-        "influence": 0.3333,
-        "persistence": 0.6667,
-        "resilience": 0.5,
+        "influence": 0.6667,
+        "persistence": 0.3333,
+        "resilience": 0.6667,
         "rigor": 0.6667,
         "risk_appetite": 0.6667,
         "situational_leadership": 0.5,
         "social_interaction": 0.3333,
-        "value_orientation": 0.1667,
+        "value_orientation": 0.3333,
     }
 
     def _mixed_answers(self, base: list[str]) -> dict[str, str]:
@@ -111,8 +128,8 @@ class TestGoldenMixedPattern:
         profile = scorer.score("golden_mixed_2", self._mixed_answers(base), None)
         arche = compute_archetype_distribution(profile, registry).model_dump()
 
-        assert arche["dominant"] == "Builder"
-        assert arche["secondary"] == "Explorer"
+        assert arche["dominant"] == "Operator"
+        assert arche["secondary"] == "Builder"
 
     def test_startup_context_shifts_decision_speed_and_risk_appetite_up(self, engine_setup):
         """Sanity check that context reweighting is still active — doesn't

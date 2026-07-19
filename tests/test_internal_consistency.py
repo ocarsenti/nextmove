@@ -82,7 +82,10 @@ class TestAlphaBand:
 class TestItemScores:
     def test_extracts_scores_for_all_base_questions(self):
         qs = bank.base_questions_for("autonomy")
-        answers = {q.id: "C" for q in qs}  # "C" = 1.0 on every autonomy question
+        # Select, per question, whichever option scores 1.0 — no longer
+        # always "C" since the bank deliberately varies which letter
+        # carries which score (see ontology/questions_seed.json revision).
+        answers = {q.id: next(o.value for o in q.options if o.score == 1.0) for q in qs}
         scores = _item_scores(bank, "autonomy", answers)
         assert scores == [1.0] * len(qs)
 
@@ -121,10 +124,19 @@ class TestComputeInternalConsistencyReport:
 
     def test_consistent_answers_across_respondents_give_high_alpha(self):
         qs = bank.base_questions_for("autonomy")
+        # Each synthetic respondent must answer at a FIXED SCORE across all
+        # 3 items to be genuinely self-consistent — a fixed LETTER no longer
+        # guarantees that, since the bank varies which letter carries which
+        # score per question (that's the point: position no longer signals
+        # direction). Pick, per question, the option matching each target
+        # score instead.
+        def _answers_at(target_score):
+            return {q.id: next(o.value for o in q.options if o.score == target_score) for q in qs}
+
         passages = [
-            _passage_row({q.id: "C" for q in qs}),
-            _passage_row({q.id: "A" for q in qs}),
-            _passage_row({q.id: "B" for q in qs}),
+            _passage_row(_answers_at(1.0)),
+            _passage_row(_answers_at(0.0)),
+            _passage_row(_answers_at(0.5)),
         ]
         report = compute_internal_consistency_report(bank, registry, passages)
         axis = report["axes"]["autonomy"]
