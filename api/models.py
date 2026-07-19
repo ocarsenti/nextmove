@@ -113,35 +113,25 @@ class JobExtractResponse(BaseModel):
 
 
 # ===================================================================
-# RELIABILITY STUDY — separate from the product, requires explicit,
-# dedicated consent (see research/storage.py)
+# TEST-RETEST STUDY
 # ===================================================================
 
-class ResearchConsentResponse(BaseModel):
-    participant_code: str
-
-
-class ResearchSubmitRequest(BaseModel):
-    participant_code: str
+class RetestSaveRequest(BaseModel):
+    user_id: str
     answers: dict[str, str]
-    context_id: Optional[str] = None
+    context_hint: Optional[str] = None
+    participant_code: Optional[str] = None   # None on first passage; required on retest
 
 
-class ResearchSubmitResponse(BaseModel):
-    submission_id: int
+class RetestSaveResponse(BaseModel):
+    participant_code: str
+    passage_number: int
+    is_new_participant: bool
 
 
-class ResearchWithdrawRequest(BaseModel):
+class RetestWithdrawRequest(BaseModel):
     participant_code: str
 
 
-class ResearchWithdrawResponse(BaseModel):
-    deleted_submissions: int
-
-
-class ReliabilityReportResponse(BaseModel):
-    registry_version: int
-    n_total_submissions: int
-    internal_consistency: dict[str, dict]
-    inter_axis_correlations: dict[str, Optional[float]]
-    test_retest: dict[str, dict]
+class RetestWithdrawResponse(BaseModel):
+    deleted_passages: int

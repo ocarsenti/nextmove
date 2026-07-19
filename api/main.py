@@ -23,10 +23,11 @@ from engine.transformation import TransformationEngine
 from engine.matching import compute_tensions
 from engine.archetype import compute_archetype_distribution
 from engine.constraints import load_constraint_library, analyze_job
-from research import storage as research_storage
-from research.reliability import full_reliability_report
 from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
+from engine.retest_store import RetestStore, UnknownParticipantCode
+from engine.retest_analysis import compute_retest_report
+from engine.quality_report import compute_quality_report
 from questionnaire.adaptive import AdaptiveQuestionnaire
 from api.models import (
     ScoreRequest, ScoreResponse,
@@ -35,8 +36,8 @@ from api.models import (
     JobCardRequest, JobCardResponse, MatchRequest, MatchResponse,
     JobConstraintsResponse,
     JobExtractRequest, JobExtractResponse,
-    ResearchConsentResponse, ResearchSubmitRequest, ResearchSubmitResponse,
-    ResearchWithdrawRequest, ResearchWithdrawResponse, ReliabilityReportResponse,
+    RetestSaveRequest, RetestSaveResponse,
+    RetestWithdrawRequest, RetestWithdrawResponse,
 )
 
 app = FastAPI(
@@ -67,7 +68,7 @@ _audit_log = AuditLog()
 _transformation_engine = TransformationEngine(_registry, _audit_log)
 _job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no persistence layer yet)
 _constraint_library = load_constraint_library()
-research_storage.init_db()
+_retest_store = RetestStore()
 
 
 # ===================================================================
@@ -149,27 +150,26 @@ def get_next_questions(req: NextQuestionsRequest):
 # SCORING
 # ===================================================================
 
-@app.post("/score", response_model=ScoreResponse)
-def score_profile(req: ScoreRequest):
-    """Compute a profile from questionnaire answers."""
+def _compute_score(user_id: str, answers: dict[str, str], context_hint: Optional[str]) -> ScoreResponse:
+    """Shared scoring computation behind /score and /study/retest/save."""
     # Detect or resolve context
     context_id: str | None = None
-    if req.context_hint:
-        context_id = _context_engine.detect_context(req.context_hint)
-        if context_id is None and req.context_hint in KNOWN_CONTEXTS:
-            context_id = req.context_hint
+    if context_hint:
+        context_id = _context_engine.detect_context(context_hint)
+        if context_id is None and context_hint in KNOWN_CONTEXTS:
+            context_id = context_hint
 
     # Evaluate rules
     rules_fired = _rule_engine.evaluate(_registry, context_id)
 
     # Compute profile
-    profile = _scorer.score(req.user_id, req.answers, context_id)
+    profile = _scorer.score(user_id, answers, context_id)
 
     # Explanation
     trace = _explainer.explain(profile, rules_fired, _registry)
 
     # Pending questions
-    already_seen = set(req.answers.keys())
+    already_seen = set(answers.keys())
     pending = _questionnaire.pending_questions(profile, already_seen)
     low_conf = _scorer.low_confidence_axes(profile)
     weighted = _scorer.weighted_profile(profile)
@@ -191,6 +191,69 @@ def score_profile(req: ScoreRequest):
         },
         archetype=compute_archetype_distribution(profile, _registry).model_dump(),
     )
+
+
+@app.post("/score", response_model=ScoreResponse)
+def score_profile(req: ScoreRequest):
+    """Compute a profile from questionnaire answers."""
+    return _compute_score(req.user_id, req.answers, req.context_hint)
+
+
+@app.post("/study/retest/save", response_model=RetestSaveResponse)
+def save_retest_passage(req: RetestSaveRequest):
+    """Persist one test-retest passage for the reproducibility study.
+
+    Only called when the user has explicitly opted in. First passage:
+    omit participant_code, get one back to keep. Retest: pass the same
+    code back to link it to the first passage.
+    """
+    result = _compute_score(req.user_id, req.answers, req.context_hint)
+
+    try:
+        participant_code, passage_number = _retest_store.save_passage(
+            session_user_id=req.user_id,
+            context_id=result.context_detected,
+            registry_version=_registry.version,
+            answers=req.answers,
+            axis_scores=result.axis_scores,
+            weighted_scores=result.weighted_scores,
+            archetype_dominant=result.archetype.get("dominant"),
+            archetype_secondary=result.archetype.get("secondary"),
+            is_complete=result.is_complete,
+            participant_code=req.participant_code,
+        )
+    except UnknownParticipantCode:
+        raise HTTPException(
+            status_code=404,
+            detail="Code participant inconnu — vérifiez qu'il a été saisi correctement.",
+        )
+
+    return RetestSaveResponse(
+        participant_code=participant_code,
+        passage_number=passage_number,
+        is_new_participant=req.participant_code is None,
+    )
+
+
+@app.get("/study/retest/report")
+def retest_report():
+    """Per-axis test-retest reliability (ICC, Pearson r, tolerance-band agreement).
+
+    Not exposed unauthenticated on the public domain — nginx puts this path
+    behind basic auth alongside the admin frontend page.
+    """
+    return compute_retest_report(_retest_store)
+
+
+@app.get("/study/quality/report")
+def quality_report():
+    """Internal consistency + inter-axis correlation, from opt-in study passages.
+
+    Answers methode.html's "Cohérence interne" and "Validité de construit"
+    rows — separate from /study/retest/report, which covers reproducibility.
+    Not exposed unauthenticated on the public domain, same as the retest report.
+    """
+    return compute_quality_report(_retest_store, _bank, _registry)
 
 
 # ===================================================================
@@ -574,49 +637,15 @@ def get_contexts():
 
 
 # ===================================================================
-# RELIABILITY STUDY — separate from the product's own runtime state.
-# Requires dedicated consent, captured client-side before any call here.
+# RETEST STUDY — right to withdraw (missing piece added on top of the
+# study/retest/* endpoints; see engine/retest_store.py::delete_participant)
 # ===================================================================
 
-@app.post("/research/consent", response_model=ResearchConsentResponse)
-def research_consent():
-    """Issue a participant_code for the reliability study. The caller (frontend)
-    must persist it locally to pair a future retest with this one — it is not
-    linked to any product account, email, or name."""
-    code = research_storage.create_participant()
-    return ResearchConsentResponse(participant_code=code)
-
-
-@app.post("/research/submit", response_model=ResearchSubmitResponse)
-def research_submit(req: ResearchSubmitRequest):
-    """Store raw answers (never derived scores) + the ontology version in
-    effect — recomputable later even if scoring logic changes."""
-    if not research_storage.participant_exists(req.participant_code):
-        raise HTTPException(status_code=404, detail="Unknown participant_code — call /research/consent first")
-    submission_id = research_storage.save_submission(
-        participant_code=req.participant_code,
-        registry_version=_registry.version,
-        answers=req.answers,
-        context_id=req.context_id,
-    )
-    return ResearchSubmitResponse(submission_id=submission_id)
-
-
-@app.post("/research/withdraw", response_model=ResearchWithdrawResponse)
-def research_withdraw(req: ResearchWithdrawRequest):
-    """Right to withdraw: deletes this participant's data entirely, immediately."""
-    deleted = research_storage.withdraw_consent(req.participant_code)
-    return ResearchWithdrawResponse(deleted_submissions=deleted)
-
-
-@app.get("/research/reliability-report", response_model=ReliabilityReportResponse)
-def reliability_report():
-    """Cronbach's alpha per axis, inter-axis correlations, short-term
-    test-retest — computed live from accumulated submissions. Below the
-    minimum respondent threshold, a value is reported as null/not
-    'reportable' rather than shown as a misleadingly precise number."""
-    report = full_reliability_report()
-    return ReliabilityReportResponse(**report)
+@app.post("/study/retest/withdraw", response_model=RetestWithdrawResponse)
+def retest_withdraw(req: RetestWithdrawRequest):
+    """Right to withdraw: deletes this participant's passages entirely, immediately."""
+    deleted = _retest_store.delete_participant(req.participant_code)
+    return RetestWithdrawResponse(deleted_passages=deleted)
 
 
 # ===================================================================

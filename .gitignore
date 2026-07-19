@@ -3,6 +3,9 @@ __pycache__/
 *.pyo
 .env
 data/profiles/
+data/retest/
 venv/
 *.log
-research/*.db
+htmlcov/
+.coverage
+.pytest_cache/
