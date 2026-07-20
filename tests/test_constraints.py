@@ -24,9 +24,9 @@ def _build_full_answers(bank, registry, score_value="B"):
 
 class TestConstraintLibrary(unittest.TestCase):
 
-    def test_loads_seven_constraints(self):
+    def test_loads_ten_constraints(self):
         lib = load_constraint_library()
-        self.assertEqual(len(lib), 7)
+        self.assertEqual(len(lib), 10)
 
     def test_every_constraint_has_at_least_two_triggers(self):
         # A constraint is a PATTERN across axes, never a single-axis reading.

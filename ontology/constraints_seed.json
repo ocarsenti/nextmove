@@ -7,7 +7,7 @@
         {"axis_id": "cognitive_structuring", "operator": ">", "threshold": 0.7},
         {"axis_id": "ambiguity_tolerance", "operator": ">", "threshold": 0.6}
       ],
-      "axes_involved": ["cognitive_structuring", "ambiguity_tolerance", "resilience"],
+      "axes_involved": ["cognitive_structuring", "ambiguity_tolerance", "rigor"],
       "risks": ["rigidité perçue face au changement", "fatigue décisionnelle"]
     },
     {
@@ -70,6 +70,36 @@
       ],
       "axes_involved": ["autonomy", "resilience", "risk_appetite"],
       "risks": ["isolement décisionnel", "charge de responsabilité"]
+    },
+    {
+      "id": "C008",
+      "name": "Construire dans un environnement peu défini",
+      "triggers": [
+        {"axis_id": "exploration", "operator": ">", "threshold": 0.6},
+        {"axis_id": "autonomy", "operator": ">", "threshold": 0.7}
+      ],
+      "axes_involved": ["exploration", "autonomy", "ambiguity_tolerance", "cognitive_flexibility"],
+      "risks": ["dispersion sans repères", "difficulté à livrer sans cadre imposé"]
+    },
+    {
+      "id": "C009",
+      "name": "Transformer une expertise en influence",
+      "triggers": [
+        {"axis_id": "rigor", "operator": ">", "threshold": 0.7},
+        {"axis_id": "influence", "operator": ">", "threshold": 0.6}
+      ],
+      "axes_involved": ["rigor", "influence", "social_interaction"],
+      "risks": ["frustration de ne pas être entendu malgré l'expertise", "difficulté à vulgariser"]
+    },
+    {
+      "id": "C010",
+      "name": "Coordonner sans contrôler",
+      "triggers": [
+        {"axis_id": "social_interaction", "operator": ">", "threshold": 0.7},
+        {"axis_id": "cognitive_structuring", "operator": ">", "threshold": 0.6}
+      ],
+      "axes_involved": ["cognitive_structuring", "social_interaction", "cognitive_flexibility", "autonomy"],
+      "risks": ["perte de contrôle perçue", "difficulté à faire respecter les délais sans autorité directe"]
     }
   ]
 }
