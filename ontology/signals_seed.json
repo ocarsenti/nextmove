@@ -3,7 +3,8 @@
     {
       "id": "cadre_reglementaire",
       "label": "Environnement réglementé / conformité",
-      "axis_effects": {"cognitive_structuring": {"level": 0.8, "importance": 0.7}}
+      "axis_effects": {"cognitive_structuring": {"level": 0.8, "importance": 0.7}},
+      "constraint_votes": ["C005"]
     },
     {
       "id": "coordination_multi_equipes",

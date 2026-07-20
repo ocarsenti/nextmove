@@ -66,6 +66,7 @@ class JobCardRequest(BaseModel):
     context_id: Optional[str] = None
     description: str = ""
     axis_requirements: dict[str, dict]   # {axis_id: {"level": float, "importance": float, "note": str}}
+    detected_signal_ids: list[str] = []  # from a prior /jobs/extract call, if any — passed through as-is
 
 
 class JobCardResponse(BaseModel):

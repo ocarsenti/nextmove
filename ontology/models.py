@@ -188,6 +188,7 @@ class JobCard(BaseModel):
     context_id: Optional[str] = None            # links to ContextEngine's known contexts, if applicable
     description: str = ""
     axis_requirements: dict[str, JobAxisRequirement] = Field(default_factory=dict)
+    detected_signal_ids: list[str] = Field(default_factory=list)  # from extraction, if any — empty for manually-built jobs
     version: int = 1
 
 
@@ -275,6 +276,17 @@ class JobConstraint(BaseModel):
     triggers: list[ConstraintTrigger]   # ALL must hold against job.axis_requirements (AND)
     axes_involved: list[str]            # candidate axes checked for compatibility with this constraint
     risks: list[str]                    # what tends to go wrong when a candidate is a poor fit for this constraint
+    required_signal_votes: list[str] = Field(default_factory=list)
+    # If non-empty: the axis-threshold triggers above are NECESSARY but no longer
+    # SUFFICIENT — at least one of these signal_ids must also have been detected
+    # in the job's source text (job.detected_signal_ids) for the constraint to
+    # fire. Added after two real job descriptions both false-positived C005
+    # (cognitive_structuring pushed high by an unrelated signal, e.g. internal
+    # governance process language, not actual regulatory conformity) — the
+    # axis alone can't distinguish which signal produced it, so for a
+    # constraint whose NAME implies a specific textual origin, that origin
+    # must be checked directly. Left empty (no change in behavior) for every
+    # constraint that hasn't shown this failure mode.
 
 
 class ConstraintCompatibility(BaseModel):
@@ -321,6 +333,11 @@ class JobSignal(BaseModel):
     id: str
     label: str
     axis_effects: dict[str, AxisEffect]
+    constraint_votes: list[str] = Field(default_factory=list)
+    # Constraint ids this signal directly supports — read by
+    # JobConstraint.required_signal_votes, not by the axis-threshold path.
+    # A signal can contribute to axes AND vote for a constraint at the same
+    # time; the two mechanisms are independent.
 
 
 class DetectedSignal(BaseModel):

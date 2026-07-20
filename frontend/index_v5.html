@@ -401,6 +401,7 @@ let seenQuestionIds = [];
 let axesById = {};
 let jobs = [];
 let selectedJobId = null;
+let lastExtractedSignalIds = [];
 let lastUserId = 'candidate_' + Math.random().toString(36).slice(2, 8);
 
 function apiBase() { return document.getElementById('apiBase').value.replace(/\/$/, ''); }
@@ -668,6 +669,7 @@ document.getElementById('extractJobBtn').addEventListener('click', async () => {
     const { axis_requirements, signals } = await r.json();
     applyExtractedAxes(axis_requirements);
     renderSignals(signals);
+    lastExtractedSignalIds = signals.map(s => s.signal_id);
     status.textContent = 'Curseurs pré-remplis depuis la description — ajuste si besoin.';
   } catch (e) {
     status.textContent = '';
@@ -696,7 +698,7 @@ document.getElementById('createJobBtn').addEventListener('click', async () => {
 
   const r = await fetch(apiBase() + '/jobs', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ job_id: jobId, title, context_id: contextId, description: '', axis_requirements }),
+    body: JSON.stringify({ job_id: jobId, title, context_id: contextId, description: '', axis_requirements, detected_signal_ids: lastExtractedSignalIds }),
   });
   if (!r.ok) { showError('Erreur à la création de la job card (' + r.status + ').'); return; }
   selectedJobId = jobId;

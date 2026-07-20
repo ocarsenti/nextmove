@@ -379,6 +379,7 @@ def create_job(req: JobCardRequest):
         context_id=req.context_id,
         description=req.description,
         axis_requirements=axis_requirements,
+        detected_signal_ids=req.detected_signal_ids,
         version=version,
     )
     _job_store[req.job_id] = job

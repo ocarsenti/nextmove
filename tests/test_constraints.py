@@ -174,5 +174,71 @@ class TestArchitecturalIsolation(unittest.TestCase):
         self.assertNotIn("constraint", source.lower())
 
 
+class TestRequiredSignalVotes(unittest.TestCase):
+    """C005 false-fired on two real job descriptions (Alan Marketing Ops,
+    Servier R&D Project Leader) via axis thresholds alone — cognitive_structuring
+    was pushed high by unrelated signals (internal process/governance language),
+    never actual regulatory conformity. required_signal_votes fixes this by
+    requiring the cadre_reglementaire signal specifically, not just the axis
+    threshold it happens to share with other signals."""
+
+    def setUp(self):
+        self.library = load_constraint_library()
+        self.c005 = next(c for c in self.library if c.id == "C005")
+
+    def _job_meeting_c005_thresholds(self, detected_signal_ids=None):
+        return JobCard(
+            job_id="j", title="Test",
+            axis_requirements={
+                "exploration": JobAxisRequirement(axis_id="exploration", level=0.8),
+                "cognitive_structuring": JobAxisRequirement(axis_id="cognitive_structuring", level=0.85),
+            },
+            detected_signal_ids=detected_signal_ids or [],
+        )
+
+    def test_c005_declares_required_signal_vote(self):
+        self.assertEqual(self.c005.required_signal_votes, ["cadre_reglementaire"])
+
+    def test_thresholds_alone_no_longer_fire_c005(self):
+        # This is exactly the false-positive pattern from the two real JDs:
+        # axis thresholds met, but no cadre_reglementaire signal detected
+        # (cognitive_structuring came from e.g. "processus_stricts" instead).
+        job = self._job_meeting_c005_thresholds(detected_signal_ids=["processus_stricts", "innovation_produit"])
+        detected = detect_constraints(job, self.library)
+        self.assertNotIn("C005", [c.id for c in detected])
+
+    def test_thresholds_plus_required_vote_fires_c005(self):
+        job = self._job_meeting_c005_thresholds(detected_signal_ids=["cadre_reglementaire"])
+        detected = detect_constraints(job, self.library)
+        self.assertIn("C005", [c.id for c in detected])
+
+    def test_required_vote_without_thresholds_does_not_fire_c005(self):
+        # The vote is necessary but still not sufficient — axis thresholds
+        # (the actual pattern) must still hold too.
+        job = JobCard(
+            job_id="j", title="Test",
+            axis_requirements={
+                "exploration": JobAxisRequirement(axis_id="exploration", level=0.2),
+            },
+            detected_signal_ids=["cadre_reglementaire"],
+        )
+        detected = detect_constraints(job, self.library)
+        self.assertNotIn("C005", [c.id for c in detected])
+
+    def test_constraints_without_required_votes_are_unaffected(self):
+        # C002 has no required_signal_votes — must behave exactly as before,
+        # firing on axis thresholds alone regardless of detected_signal_ids.
+        job = JobCard(
+            job_id="j", title="Test",
+            axis_requirements={
+                "influence": JobAxisRequirement(axis_id="influence", level=0.9),
+                "social_interaction": JobAxisRequirement(axis_id="social_interaction", level=0.9),
+            },
+            detected_signal_ids=[],
+        )
+        detected = detect_constraints(job, self.library)
+        self.assertIn("C002", [c.id for c in detected])
+
+
 if __name__ == "__main__":
     unittest.main()

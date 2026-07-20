@@ -48,7 +48,8 @@
         {"axis_id": "cognitive_structuring", "operator": ">", "threshold": 0.7}
       ],
       "axes_involved": ["exploration", "cognitive_structuring", "ambiguity_tolerance"],
-      "risks": ["tension entre créativité et cadre", "frustration procédurale"]
+      "risks": ["tension entre créativité et cadre", "frustration procédurale"],
+      "required_signal_votes": ["cadre_reglementaire"]
     },
     {
       "id": "C006",

@@ -65,8 +65,24 @@ def _trigger_holds(trigger, job: JobCard) -> bool:
 def detect_constraints(job: JobCard, library: list[JobConstraint]) -> list[JobConstraint]:
     """Which constraints does this job's axis_requirements combination trigger?
     A constraint fires only if ALL of its triggers hold — it's a pattern
-    across axes, never a single-axis reading."""
-    return [c for c in library if all(_trigger_holds(t, job) for t in c.triggers)]
+    across axes, never a single-axis reading.
+
+    If a constraint declares required_signal_votes, the axis thresholds are
+    necessary but no longer sufficient: at least one of those signal_ids
+    must also be in job.detected_signal_ids. This exists because an axis
+    can be pushed up by several unrelated signals (e.g. cognitive_structuring
+    rising from internal-governance language, not actual regulatory
+    conformity) — for a constraint whose name implies a specific textual
+    origin, that origin has to be checked directly, not inferred from the
+    aggregated axis alone."""
+    detected = []
+    for c in library:
+        if not all(_trigger_holds(t, job) for t in c.triggers):
+            continue
+        if c.required_signal_votes and not (set(c.required_signal_votes) & set(job.detected_signal_ids)):
+            continue
+        detected.append(c)
+    return detected
 
 
 def build_job_narrative(job: JobCard, detected: list[JobConstraint]) -> str:
