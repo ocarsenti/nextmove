@@ -87,6 +87,34 @@
       "id": "mission_sens",
       "label": "Mission à forte portée sociétale ou éthique",
       "axis_effects": {"value_orientation": {"level": 0.8, "importance": 0.6}}
+    },
+    {
+      "id": "urgence_reactivite",
+      "label": "Nécessité de réagir vite face à l'urgence (astreintes, incidents, délais courts)",
+      "axis_effects": {"decision_speed": {"level": 0.75, "importance": 0.6}}
+    },
+    {
+      "id": "paris_incertains",
+      "label": "Engagement sur des paris commerciaux, techniques ou d'investissement à l'issue incertaine",
+      "axis_effects": {"risk_appetite": {"level": 0.75, "importance": 0.6}}
+    },
+    {
+      "id": "perimetre_evolutif",
+      "label": "Objectifs ou périmètre de mission amenés à évoluer significativement en cours de route",
+      "axis_effects": {"ambiguity_tolerance": {"level": 0.7, "importance": 0.6}}
+    },
+    {
+      "id": "responsabilite_sans_validation",
+      "label": "Prise de décisions opérationnelles sans validation hiérarchique préalable",
+      "axis_effects": {
+        "decision_speed": {"level": 0.7, "importance": 0.5},
+        "autonomy": {"level": 0.6, "importance": 0.5}
+      }
+    },
+    {
+      "id": "changement_frequent_priorites",
+      "label": "Changement fréquent de priorités ou de sujets traités",
+      "axis_effects": {"cognitive_flexibility": {"level": 0.75, "importance": 0.6}}
     }
   ]
 }
