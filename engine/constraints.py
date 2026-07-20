@@ -33,6 +33,7 @@ from ontology.models import (
     JobConstraintProfile,
     Profile,
 )
+from engine.matching import LOW_THRESHOLD as MATCHING_LOW_THRESHOLD
 
 _OPS = {
     ">": operator.gt,
@@ -96,7 +97,19 @@ def build_job_narrative(job: JobCard, detected: list[JobConstraint]) -> str:
     return f"« {job.title} » n'est pas un poste générique : c'est un environnement où il faut {body}."
 
 
-def assess_compatibility(profile: Profile, constraint: JobConstraint) -> ConstraintCompatibility:
+def assess_compatibility(profile: Profile, job: JobCard, constraint: JobConstraint) -> ConstraintCompatibility:
+    """Compares the candidate to what THIS job actually requires on each of the
+    constraint's axes — not a fixed universal floor. Found necessary while
+    testing on real personas: the previous version checked candidate.raw_value
+    against a flat 0.5 threshold regardless of the job's own level, which
+    meant a candidate barely above 0.5 on a job demanding 0.9 counted as
+    "aligned", while one comfortably above what a low-demand job actually
+    needed could count as "tension" — the classification never reflected the
+    specific job at all.
+
+    For an axis the job doesn't itself require (in axes_involved for
+    compatibility but absent from job.axis_requirements), there's no
+    job-specific target — falls back to the absolute SUFFICIENCY_FLOOR."""
     checked: list[str] = []
     unavailable: list[str] = []
     weak: list[str] = []
@@ -110,7 +123,15 @@ def assess_compatibility(profile: Profile, constraint: JobConstraint) -> Constra
             unavailable.append(axis_id)
             continue
         checked.append(axis_id)
-        if score.raw_value < SUFFICIENCY_FLOOR:
+
+        job_req = job.axis_requirements.get(axis_id)
+        if job_req is not None:
+            # Same alignment logic as engine/matching.py's tension intensity —
+            # weak only if the candidate falls meaningfully short of what
+            # THIS job asks for, not an arbitrary universal number.
+            if score.raw_value < job_req.level - MATCHING_LOW_THRESHOLD:
+                weak.append(axis_id)
+        elif score.raw_value < SUFFICIENCY_FLOOR:
             weak.append(axis_id)
 
     if not checked:
@@ -171,7 +192,7 @@ def analyze_job(job: JobCard, library: list[JobConstraint], profile: Profile | N
     compatibilities: list[ConstraintCompatibility] = []
     match_narrative = ""
     if profile is not None and detected:
-        compatibilities = [assess_compatibility(profile, c) for c in detected]
+        compatibilities = [assess_compatibility(profile, job, c) for c in detected]
         match_narrative = build_match_narrative(compatibilities)
 
     return JobConstraintProfile(

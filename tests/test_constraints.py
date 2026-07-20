@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ontology.models import JobAxisRequirement, JobCard
+from ontology.models import JobAxisRequirement, JobCard, Profile, AxisScore
 from ontology.registry import AxisRegistry, QuestionBank
 from engine.scorer import ProfileScorer
 from engine.constraints import (
@@ -96,31 +96,38 @@ class TestAssessCompatibility(unittest.TestCase):
         self.bank = QuestionBank()
         self.scorer = ProfileScorer(self.registry, self.bank)
         self.library = load_constraint_library()
+        self.c002 = next(c for c in self.library if c.id == "C002")
+
+    def _job_requiring(self, levels: dict[str, float]) -> JobCard:
+        return JobCard(
+            job_id="j", title="Test",
+            axis_requirements={ax: JobAxisRequirement(axis_id=ax, level=lvl) for ax, lvl in levels.items()},
+        )
 
     def test_high_scoring_candidate_is_aligned(self):
         answers = _build_full_answers(self.bank, self.registry, score_value="C")
         profile = self.scorer.score("cand_high", answers)
-        c002 = next(c for c in self.library if c.id == "C002")
-        result = assess_compatibility(profile, c002)
-        self.assertIn(result.status, ("aligned", "tension"))  # depends on seed answer mapping, but must not crash
+        job = self._job_requiring({"influence": 0.7, "situational_leadership": 0.6, "resilience": 0.6})
+        result = assess_compatibility(profile, job, self.c002)
+        self.assertIn(result.status, ("aligned", "tension"))
         self.assertTrue(result.narrative)
 
     def test_low_scoring_axis_produces_tension_with_risks(self):
         answers = _build_full_answers(self.bank, self.registry, score_value="A")  # low answers
         profile = self.scorer.score("cand_low", answers)
-        c002 = next(c for c in self.library if c.id == "C002")
-        result = assess_compatibility(profile, c002)
+        job = self._job_requiring({"influence": 0.7, "situational_leadership": 0.6, "resilience": 0.6})
+        result = assess_compatibility(profile, job, self.c002)
         if result.status == "tension":
             self.assertTrue(result.risks_flagged)
-            self.assertEqual(set(result.risks_flagged), set(c002.risks))
+            self.assertEqual(set(result.risks_flagged), set(self.c002.risks))
 
     def test_masked_axis_marked_unavailable_not_silently_dropped(self):
         answers = _build_full_answers(self.bank, self.registry, score_value="C")
         self.registry.mask("influence", reason="test")
         try:
             profile = self.scorer.score("cand_masked", answers)
-            c002 = next(c for c in self.library if c.id == "C002")
-            result = assess_compatibility(profile, c002)
+            job = self._job_requiring({"influence": 0.7, "situational_leadership": 0.6, "resilience": 0.6})
+            result = assess_compatibility(profile, job, self.c002)
             self.assertIn("influence", result.axes_unavailable)
             self.assertNotIn("influence", result.axes_checked)
         finally:
@@ -129,9 +136,60 @@ class TestAssessCompatibility(unittest.TestCase):
     def test_no_usable_axes_gives_unknown_status(self):
         answers = {}
         profile = self.scorer.score("cand_empty", answers)
-        c002 = next(c for c in self.library if c.id == "C002")
-        result = assess_compatibility(profile, c002)
+        job = self._job_requiring({"influence": 0.7, "situational_leadership": 0.6, "resilience": 0.6})
+        result = assess_compatibility(profile, job, self.c002)
         self.assertEqual(result.status, "unknown")
+
+    def test_candidate_just_above_absolute_floor_is_tension_if_job_demands_much_more(self):
+        # The bug found while testing on real personas: a flat 0.5 floor used
+        # to call this "aligned" regardless of the job. A candidate at 0.55 on
+        # an axis the job requires at 0.95 is NOT a real match.
+        profile = Profile(
+            user_id="cand_barely_above_floor",
+            axis_scores={
+                "influence": AxisScore(axis_id="influence", raw_value=0.55, confidence=0.9, n_questions=3),
+                "situational_leadership": AxisScore(axis_id="situational_leadership", raw_value=0.55, confidence=0.9, n_questions=3),
+                "resilience": AxisScore(axis_id="resilience", raw_value=0.55, confidence=0.9, n_questions=3),
+            },
+            is_complete=True,
+        )
+        demanding_job = self._job_requiring({"influence": 0.95, "situational_leadership": 0.9, "resilience": 0.9})
+        result = assess_compatibility(profile, demanding_job, self.c002)
+        self.assertEqual(result.status, "tension")
+
+    def test_candidate_below_absolute_floor_is_aligned_if_job_barely_needs_it(self):
+        # The mirror case: 0.45 used to always mean "tension" (below the old
+        # flat 0.5 floor), even against a job that itself only asks for 0.3.
+        profile = Profile(
+            user_id="cand_below_old_floor",
+            axis_scores={
+                "influence": AxisScore(axis_id="influence", raw_value=0.45, confidence=0.9, n_questions=3),
+                "situational_leadership": AxisScore(axis_id="situational_leadership", raw_value=0.45, confidence=0.9, n_questions=3),
+                "resilience": AxisScore(axis_id="resilience", raw_value=0.45, confidence=0.9, n_questions=3),
+            },
+            is_complete=True,
+        )
+        undemanding_job = self._job_requiring({"influence": 0.3, "situational_leadership": 0.3, "resilience": 0.3})
+        result = assess_compatibility(profile, undemanding_job, self.c002)
+        self.assertEqual(result.status, "aligned")
+
+    def test_falls_back_to_absolute_floor_when_job_has_no_requirement_on_axis(self):
+        # resilience is in C002.axes_involved but this job never set a
+        # requirement for it — no job-specific target exists, so the
+        # absolute SUFFICIENCY_FLOOR (0.5) is the only reasonable fallback.
+        profile = Profile(
+            user_id="cand_fallback",
+            axis_scores={
+                "influence": AxisScore(axis_id="influence", raw_value=0.8, confidence=0.9, n_questions=3),
+                "situational_leadership": AxisScore(axis_id="situational_leadership", raw_value=0.8, confidence=0.9, n_questions=3),
+                "resilience": AxisScore(axis_id="resilience", raw_value=0.45, confidence=0.9, n_questions=3),
+            },
+            is_complete=True,
+        )
+        job_missing_resilience = self._job_requiring({"influence": 0.7, "situational_leadership": 0.6})
+        result = assess_compatibility(profile, job_missing_resilience, self.c002)
+        self.assertEqual(result.status, "tension")
+        self.assertIn("resilience", result.narrative)
 
 
 class TestAnalyzeJob(unittest.TestCase):
