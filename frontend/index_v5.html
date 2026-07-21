@@ -1040,7 +1040,8 @@ function drawRing() {
     ctx.restore();
   }
 
-  const textR = (R + bannerInner) / 2;
+  const textR = (R + bannerInner) / 2 + 18;
+  const textR2 = bannerInner + 40;
   const textCenter = Math.PI * 0.75;
 
   ctx.fillStyle = '#ffffff';
@@ -1048,14 +1049,19 @@ function drawRing() {
   ctx.textBaseline = 'middle';
 
   if (ringMode === 'both') {
-    const line = '#' + primary.name.toUpperCase() + '  ·  NEXTMOVE';
-    ctx.font = 'bold 54px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    const line = 'ARCHÉTYPE PRÉF. ' + primary.name.toUpperCase() + '  ·  NEXTMOVE';
+    ctx.font = 'bold 42px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     drawTextOnArcBottom(ctx, line, cx, cy, textR, textCenter);
   } else {
-    const line = '#' + primary.name.toUpperCase();
-    ctx.font = 'bold 62px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    const line = 'ARCHÉTYPE PRÉF. ' + primary.name.toUpperCase();
+    ctx.font = 'bold 48px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     drawTextOnArcBottom(ctx, line, cx, cy, textR, textCenter);
   }
+
+  const todayStr = new Date().toLocaleDateString('fr-FR');
+  ctx.font = '24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  drawTextOnArcBottom(ctx, `Auto-évaluation, non clinique — nextmove.ai/methode`, cx, cy, textR2, textCenter);
 }
 
 function drawTextOnArcBottom(ctx, text, cx, cy, radius, centerAngle) {
