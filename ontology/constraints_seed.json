@@ -100,6 +100,16 @@
       ],
       "axes_involved": ["cognitive_structuring", "social_interaction", "cognitive_flexibility", "autonomy"],
       "risks": ["perte de contrôle perçue", "difficulté à faire respecter les délais sans autorité directe"]
+    },
+    {
+      "id": "C011",
+      "name": "Concilier engagement de sens et rigueur opérationnelle",
+      "triggers": [
+        {"axis_id": "value_orientation", "operator": ">", "threshold": 0.6},
+        {"axis_id": "rigor", "operator": ">", "threshold": 0.7}
+      ],
+      "axes_involved": ["value_orientation", "rigor", "cognitive_structuring", "persistence"],
+      "risks": ["désillusion si le poids administratif ou procédural dépasse la part de sens perçue", "fatigue si la rigueur exigée entre en tension avec l'engagement personnel"]
     }
   ]
 }
