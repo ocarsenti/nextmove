@@ -70,16 +70,52 @@ CONFIDENCE_FLOOR = 0.6
 # tests/test_archetype.py for the equivalent guarantee on `percentage`).
 DISPLAY_TEMPERATURE = 0.06  # PROVISIONAL — recalibrate on real beta data before any public-facing use
 
+# Softmax alone can push a genuinely-present-but-not-dominant archetype
+# toward ~0-2%, which reads as "this trait is absent" rather than "this
+# trait exists but isn't dominant" — verified 2026-08-02: a manager
+# persona with real Operator-relevant signal (behavioral_stability=0.7,
+# social_interaction=0.8) still fell to Operator=4.0% post-softmax.
+# DISPLAY_FLOOR raises anything under this threshold up to it, taking the
+# difference proportionally from archetypes above the threshold — so the
+# dominant stays clearly dominant, but no archetype reads as literally
+# nonexistent. A profile with no real separation (all raw_affinity close
+# together, nothing under the floor) is untouched by this step.
+#
+# DISPLAY_FLOOR IS NOT CALIBRATED ON REAL DATA either — same caveat as
+# DISPLAY_TEMPERATURE above, must be set from real beta distributions,
+# not guessed.
+DISPLAY_FLOOR = 5.0  # PROVISIONAL — % minimum per archetype after softmax, before any public-facing use
 
-def _display_percentages(raw_affinity: dict[str, float], temperature: float = DISPLAY_TEMPERATURE) -> dict[str, float]:
-    """Centered-softmax transform of raw_affinity — presentation only, see module docstring above."""
+
+def _display_percentages(raw_affinity: dict[str, float], temperature: float = DISPLAY_TEMPERATURE, floor: float = DISPLAY_FLOOR) -> dict[str, float]:
+    """Centered-softmax transform of raw_affinity, floored — presentation only, see module docstring above."""
     if not raw_affinity or all(v == 0.0 for v in raw_affinity.values()):
         return {name: 0.0 for name in raw_affinity}
     values = list(raw_affinity.values())
     mean = sum(values) / len(values)
     exp_values = {name: math.exp((v - mean) / temperature) for name, v in raw_affinity.items()}
     total = sum(exp_values.values())
-    return {name: round(v / total * 100, 1) for name, v in exp_values.items()}
+    pct = {name: v / total * 100 for name, v in exp_values.items()}
+
+    below = {name: v for name, v in pct.items() if v < floor}
+    above = {name: v for name, v in pct.items() if v >= floor}
+    if below and above:
+        deficit = sum(floor - v for v in below.values())
+        above_total = sum(above.values())
+        if deficit < above_total:
+            pct = {
+                name: floor if name in below else v - deficit * (v / above_total)
+                for name, v in pct.items()
+            }
+        # else: raising every below-floor archetype to `floor` would require
+        # taking more than 100% of what's above the floor combined (only
+        # possible with many archetypes under the floor and a thin margin
+        # above it) — skip flooring for this profile rather than risk a
+        # negative percentage; fall through to the raw softmax values.
+    # if everything is below the floor (fully flat profile) or everything
+    # is above it, there's nothing to redistribute — leave pct as-is.
+
+    return {name: round(v, 1) for name, v in pct.items()}
 
 # Each archetype's affinity to the 16 primary axes (meta axes excluded).
 # Weights are non-negative and sum to 1.0 per archetype — same convention
