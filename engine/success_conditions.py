@@ -30,9 +30,17 @@ TOP_N = 3               # how many conditions to keep for a post/badge
 # as the tool having failed, not as a trait of the person. Reframe the
 # absence of a dominant condition as information, same move already made for
 # archetype.py's "polyvalent" display_mode.
+#
+# Wording note (2026-08-02, second review): "conditions de réussite" implies
+# a causal promise ("meet these and you'll succeed") the model has no data
+# to back — these are self-reported preferences, not predictors of outcome.
+# "Préférences de fonctionnement" matches the vocabulary already used in the
+# post intro ("comprendre son mode de fonctionnement professionnel") without
+# the unearned claim. Internal names (this file, the seed JSON) are left
+# as-is — only the displayed text changes.
 NO_SIGNAL_SUMMARY = (
     "Configuration polyvalente : plusieurs modes de fonctionnement compatibles selon le contexte. "
-    "Aucune condition de réussite dominante ne ressort actuellement."
+    "Aucune préférence de fonctionnement dominante ne ressort actuellement."
 )
 
 
@@ -98,5 +106,5 @@ def build_conditions_narrative(
     if not top:
         return {"display_summary": NO_SIGNAL_SUMMARY, "conditions": []}
 
-    display_summary = "Mes conditions de réussite : " + " ; ".join(c["name"] for c in top)
+    display_summary = "Mes préférences de fonctionnement : " + " ; ".join(c["name"] for c in top)
     return {"display_summary": display_summary, "conditions": top}
