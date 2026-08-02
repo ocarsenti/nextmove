@@ -86,6 +86,57 @@ DISPLAY_TEMPERATURE = 0.06  # PROVISIONAL — recalibrate on real beta data befo
 # not guessed.
 DISPLAY_FLOOR = 5.0  # PROVISIONAL — % minimum per archetype after softmax, before any public-facing use
 
+# Even after DISPLAY_TEMPERATURE + DISPLAY_FLOOR, some profiles are
+# genuinely balanced — not under-answered (see low_confidence below,
+# which is a separate, existing check on data COVERAGE), but a real
+# person whose answers just don't favor one archetype over another.
+# Verified 2026-08-02: 4 "typed" personas showed a dominant-secondary
+# display_percentage gap of 33-69pt; one deliberately balanced persona
+# (full confidence=0.85, low_confidence=False) showed only 3pt.
+# Presenting that person as "Explorer" because it happens to edge out
+# "Builder" by 3pt would misrepresent a real, positive trait (versatility)
+# as a false certainty — and risks a different archetype coming out on a
+# retest, undermining trust in the tool.
+#
+# DISPLAY_MIN_GAP gates which display_mode a profile gets:
+#   - low_confidence=True                    -> "insufficient_signal"
+#   - gap between top two display_percentage
+#     below DISPLAY_MIN_GAP                  -> "polyvalent"
+#   - otherwise                              -> "typed"
+#
+# 15.0 sits between the 3pt and 33-69pt clusters observed above, but —
+# same caveat as DISPLAY_TEMPERATURE/DISPLAY_FLOOR — this is picked from
+# 5 synthetic personas, not real data, and must be recalibrated once a
+# real beta distribution of gaps exists.
+DISPLAY_MIN_GAP = 15.0  # PROVISIONAL — minimum dominant/secondary display_percentage gap to call a profile "typed"
+
+
+def _display_mode_and_summary(scores: list[ArchetypeScore], low_confidence: bool) -> tuple[str, str]:
+    """Presentation-only classification + human-readable text — never used for
+    dominant/secondary/summary/matching, see module docstring above."""
+    by_display = sorted(scores, key=lambda s: s.display_percentage, reverse=True)
+    top, runner_up = by_display[0], by_display[1]
+
+    if low_confidence:
+        return (
+            "insufficient_signal",
+            "Profil pas encore assez précis pour une lecture fiable — répondre à plus de questions l'affinera.",
+        )
+
+    gap = top.display_percentage - runner_up.display_percentage
+    if gap < DISPLAY_MIN_GAP:
+        return (
+            "polyvalent",
+            f"Profil polyvalent — à l'aise aussi bien en {top.name} qu'en {runner_up.name}, "
+            "sans mode de fonctionnement nettement dominant.",
+        )
+
+    return (
+        "typed",
+        f"Profil professionnel : {top.name} ({top.display_percentage}%), "
+        f"avec une composante {runner_up.name} ({runner_up.display_percentage}%).",
+    )
+
 
 def _display_percentages(raw_affinity: dict[str, float], temperature: float = DISPLAY_TEMPERATURE, floor: float = DISPLAY_FLOOR) -> dict[str, float]:
     """Centered-softmax transform of raw_affinity, floored — presentation only, see module docstring above."""
@@ -248,6 +299,13 @@ def compute_archetype_distribution(profile: Profile, registry: AxisRegistry) -> 
     if scores[0].percentage > 0 and low_confidence:
         summary += " Confiance encore faible sur cette lecture — répondre à plus de questions l'affinera."
 
+    # Presentation-only layer — see module comment above DISPLAY_MIN_GAP.
+    # Does not affect dominant/secondary/summary/low_confidence above.
+    if scores[0].percentage == 0:
+        display_mode, display_summary = "insufficient_signal", summary
+    else:
+        display_mode, display_summary = _display_mode_and_summary(scores, low_confidence)
+
     return ArchetypeDistribution(
         user_id=profile.user_id,
         scores=scores,
@@ -255,4 +313,6 @@ def compute_archetype_distribution(profile: Profile, registry: AxisRegistry) -> 
         secondary=secondary,
         low_confidence=low_confidence,
         summary=summary,
+        display_mode=display_mode,
+        display_summary=display_summary,
     )

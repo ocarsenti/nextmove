@@ -248,6 +248,8 @@ class ArchetypeDistribution(BaseModel):
     secondary: Optional[str]      # name of the runner-up, if it's not negligibly close to 0
     low_confidence: bool          # True if the dominant reading itself rests on thin signal
     summary: str                  # short human-readable description of the dominance pattern
+    display_mode: str             # "typed" | "polyvalent" | "insufficient_signal" — PRESENTATION ONLY, see engine/archetype.py
+    display_summary: str          # human-readable, presentation-only counterpart to `summary` — do not use for any decision-facing logic
 
 
 # ===================================================================

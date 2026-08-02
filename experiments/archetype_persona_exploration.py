@@ -98,6 +98,8 @@ for pid, values in personas.items():
 
     print(f"\n### {pid}")
     print(f"Résumé moteur : {dist.summary}")
+    print(f"Display mode  : {dist.display_mode}")
+    print(f"Display texte : {dist.display_summary}")
     print("Distribution complète :")
     for s in dist.scores:
         marker = " <== dominant" if s.name == dist.dominant else (" <== secondaire" if s.name == dist.secondary else "")
