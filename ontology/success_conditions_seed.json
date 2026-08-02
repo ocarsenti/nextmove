@@ -1,0 +1,244 @@
+{
+  "success_conditions": [
+    {
+      "id": "S001",
+      "name": "besoin de liberté d'action, sans validation constante",
+      "triggers": [
+        { "axis_id": "autonomy", "operator": ">", "threshold": 0.7 }
+      ],
+      "axes_involved": ["autonomy"]
+    },
+    {
+      "id": "S002",
+      "name": "besoin d'un cadre clair et de points de validation réguliers",
+      "triggers": [
+        { "axis_id": "autonomy", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["autonomy"]
+    },
+    {
+      "id": "S003",
+      "name": "à l'aise dans des environnements peu balisés, avec de l'incertitude",
+      "triggers": [
+        { "axis_id": "ambiguity_tolerance", "operator": ">", "threshold": 0.65 }
+      ],
+      "axes_involved": ["ambiguity_tolerance"]
+    },
+    {
+      "id": "S004",
+      "name": "a besoin de processus clairs — l'incertitude est une source de tension",
+      "triggers": [
+        { "axis_id": "ambiguity_tolerance", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["ambiguity_tolerance"]
+    },
+    {
+      "id": "S005",
+      "name": "exigence de précision et de rigueur méthodologique",
+      "triggers": [
+        { "axis_id": "rigor", "operator": ">", "threshold": 0.75 }
+      ],
+      "axes_involved": ["rigor"]
+    },
+    {
+      "id": "S006",
+      "name": "besoin de structurer et cadrer explicitement son travail",
+      "triggers": [
+        { "axis_id": "cognitive_structuring", "operator": ">", "threshold": 0.75 }
+      ],
+      "axes_involved": ["cognitive_structuring"]
+    },
+    {
+      "id": "S007",
+      "name": "recherche de stabilité et de régularité au quotidien",
+      "triggers": [
+        { "axis_id": "behavioral_stability", "operator": ">", "threshold": 0.75 }
+      ],
+      "axes_involved": ["behavioral_stability"]
+    },
+    {
+      "id": "S008",
+      "name": "capacité à encaisser les difficultés sur la durée sans décrocher",
+      "triggers": [
+        { "axis_id": "resilience", "operator": ">", "threshold": 0.7 }
+      ],
+      "axes_involved": ["resilience"]
+    },
+    {
+      "id": "S009",
+      "name": "endurance sur des projets longs, sans besoin de résultats immédiats",
+      "triggers": [
+        { "axis_id": "persistence", "operator": ">", "threshold": 0.75 }
+      ],
+      "axes_involved": ["persistence"]
+    },
+    {
+      "id": "S010",
+      "name": "besoin d'un impact visible sur les décisions collectives",
+      "triggers": [
+        { "axis_id": "influence", "operator": ">", "threshold": 0.7 }
+      ],
+      "axes_involved": ["influence"]
+    },
+    {
+      "id": "S011",
+      "name": "besoin d'un fort ancrage relationnel au quotidien",
+      "triggers": [
+        { "axis_id": "social_interaction", "operator": ">", "threshold": 0.7 }
+      ],
+      "axes_involved": ["social_interaction"]
+    },
+    {
+      "id": "S012",
+      "name": "préfère un travail avec peu d'interactions sociales continues",
+      "triggers": [
+        { "axis_id": "social_interaction", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["social_interaction"]
+    },
+    {
+      "id": "S013",
+      "name": "besoin de diversité et de nouveauté dans les missions",
+      "triggers": [
+        { "axis_id": "exploration", "operator": ">", "threshold": 0.65 }
+      ],
+      "axes_involved": ["exploration"]
+    },
+    {
+      "id": "S014",
+      "name": "besoin de sens : l'activité doit rester alignée avec ses valeurs",
+      "triggers": [
+        { "axis_id": "value_orientation", "operator": ">", "threshold": 0.7 }
+      ],
+      "axes_involved": ["value_orientation"]
+    },
+    {
+      "id": "S015",
+      "name": "à l'aise avec l'approximatif, moins dans le contrôle méthodique systématique",
+      "triggers": [
+        { "axis_id": "rigor", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["rigor"]
+    },
+    {
+      "id": "S016",
+      "name": "avance sans avoir besoin de tout cadrer à l'avance",
+      "triggers": [
+        { "axis_id": "cognitive_structuring", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["cognitive_structuring"]
+    },
+    {
+      "id": "S017",
+      "name": "à l'aise avec le changement de routine, l'imprévu ne pose pas de problème",
+      "triggers": [
+        { "axis_id": "behavioral_stability", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["behavioral_stability"]
+    },
+    {
+      "id": "S018",
+      "name": "sensible aux difficultés répétées — a besoin d'un environnement moins éprouvant",
+      "triggers": [
+        { "axis_id": "resilience", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["resilience"]
+    },
+    {
+      "id": "S019",
+      "name": "préfère des missions courtes, avec des résultats rapides",
+      "triggers": [
+        { "axis_id": "persistence", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["persistence"]
+    },
+    {
+      "id": "S020",
+      "name": "à l'aise sans avoir à peser sur les décisions collectives",
+      "triggers": [
+        { "axis_id": "influence", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["influence"]
+    },
+    {
+      "id": "S021",
+      "name": "préfère la continuité et la répétition à la nouveauté constante",
+      "triggers": [
+        { "axis_id": "exploration", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["exploration"]
+    },
+    {
+      "id": "S022",
+      "name": "à l'aise pour prendre le lead selon la situation, sans besoin de statut formel",
+      "triggers": [
+        { "axis_id": "situational_leadership", "operator": ">", "threshold": 0.7 }
+      ],
+      "axes_involved": ["situational_leadership"]
+    },
+    {
+      "id": "S023",
+      "name": "besoin de fixer le cap et la direction pour un collectif",
+      "triggers": [
+        { "axis_id": "direction", "operator": ">", "threshold": 0.7 }
+      ],
+      "axes_involved": ["direction"]
+    },
+    {
+      "id": "S024",
+      "name": "préfère exécuter dans un cadre défini par d'autres, sans avoir à fixer le cap",
+      "triggers": [
+        { "axis_id": "direction", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["direction"]
+    },
+    {
+      "id": "S025",
+      "name": "préfère décider vite plutôt que délibérer longuement",
+      "triggers": [
+        { "axis_id": "decision_speed", "operator": ">", "threshold": 0.65 }
+      ],
+      "axes_involved": ["decision_speed"]
+    },
+    {
+      "id": "S026",
+      "name": "a besoin de prendre le temps d'analyser avant de trancher",
+      "triggers": [
+        { "axis_id": "decision_speed", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["decision_speed"]
+    },
+    {
+      "id": "S027",
+      "name": "à l'aise avec la prise de risque et l'incertitude de résultat",
+      "triggers": [
+        { "axis_id": "risk_appetite", "operator": ">", "threshold": 0.65 }
+      ],
+      "axes_involved": ["risk_appetite"]
+    },
+    {
+      "id": "S028",
+      "name": "préfère limiter l'exposition au risque et sécuriser les décisions",
+      "triggers": [
+        { "axis_id": "risk_appetite", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["risk_appetite"]
+    },
+    {
+      "id": "S029",
+      "name": "capacité à changer d'angle rapidement selon le contexte",
+      "triggers": [
+        { "axis_id": "cognitive_flexibility", "operator": ">", "threshold": 0.65 }
+      ],
+      "axes_involved": ["cognitive_flexibility"]
+    },
+    {
+      "id": "S030",
+      "name": "a besoin de continuité dans les méthodes, moins à l'aise avec des changements fréquents",
+      "triggers": [
+        { "axis_id": "cognitive_flexibility", "operator": "<", "threshold": 0.35 }
+      ],
+      "axes_involved": ["cognitive_flexibility"]
+    }
+  ]
+}
