@@ -110,6 +110,28 @@ DISPLAY_FLOOR = 5.0  # PROVISIONAL — % minimum per archetype after softmax, be
 # real beta distribution of gaps exists.
 DISPLAY_MIN_GAP = 15.0  # PROVISIONAL — minimum dominant/secondary display_percentage gap to call a profile "typed"
 
+# Remark 2 (2026-08-02 review): a bare number ("59%") invites questions
+# the model can't honestly answer — 59% of what, relative to what
+# population, is this a probability? display_percentage is neither: it's
+# a share relative to the person's OWN other archetype scores, not a
+# population-relative measure. Tiers avoid implying a precision/referent
+# that doesn't exist, while still conveying relative strength.
+# PROVISIONAL, same caveat as the constants above — boundaries picked to
+# fit the 5 synthetic personas (dominants 59-77% -> "forte", secondaries
+# 8-26% -> "modérée"/"légère"), not calibrated on real distributions.
+DISPLAY_TIERS = [
+    (55.0, "forte"),
+    (30.0, "marquée"),
+    (15.0, "modérée"),
+]  # below the lowest threshold -> "légère"
+
+
+def _tier_label(pct: float) -> str:
+    for threshold, label in DISPLAY_TIERS:
+        if pct >= threshold:
+            return label
+    return "légère"
+
 
 def _display_mode_and_summary(scores: list[ArchetypeScore], low_confidence: bool) -> tuple[str, str]:
     """Presentation-only classification + human-readable text — never used for
@@ -127,14 +149,18 @@ def _display_mode_and_summary(scores: list[ArchetypeScore], low_confidence: bool
     if gap < DISPLAY_MIN_GAP:
         return (
             "polyvalent",
-            f"Profil polyvalent — à l'aise aussi bien en {top.name} qu'en {runner_up.name}, "
+            f"Configuration polyvalente — à l'aise aussi bien en {top.name} qu'en {runner_up.name}, "
             "sans mode de fonctionnement nettement dominant.",
         )
 
+    # Remark 1 (2026-08-02 review): "Mon profil professionnel : Explorer" reads
+    # as a personality label ("I am an Explorer"). "Configuration dominante"
+    # keeps the sentence about what the model's reading says, not an identity
+    # claim — same shift in framing throughout constraints.py/archetype.py.
     return (
         "typed",
-        f"Profil professionnel : {top.name} ({top.display_percentage}%), "
-        f"avec une composante {runner_up.name} ({runner_up.display_percentage}%).",
+        f"Configuration dominante : {top.name} (affinité {_tier_label(top.display_percentage)}), "
+        f"avec une composante {runner_up.name} (affinité {_tier_label(runner_up.display_percentage)}).",
     )
 
 
