@@ -872,6 +872,13 @@ document.getElementById('retestSaveBtn').addEventListener('click', async () => {
 // =====================================================================
 const ARCH_IMAGES = {Builder:'images/builder.png',Expert:'images/expert.png',Operator:'images/operator.png',Leader:'images/leader.png',Explorer:'images/explorer.png'};
 const ARCH_COLORS = {Builder:'#9333ea',Expert:'#3b5bdb',Operator:'#dc3545',Leader:'#16a34a',Explorer:'#2563eb'};
+const ARCH_TAGLINES = {
+  Builder:"Je préfère construire, lancer, livrer.",
+  Expert:"Je préfère analyser, approfondir, résoudre.",
+  Operator:"Je préfère exécuter, optimiser, fiabiliser.",
+  Leader:"Je préfère orienter, fédérer, arbitrer.",
+  Explorer:"Je préfère découvrir, tester, pivoter."
+};
 
 // Mirrors DISPLAY_TIERS in engine/archetype.py — keep the two in sync if
 // the thresholds there are recalibrated on real beta data.
@@ -950,15 +957,19 @@ function generateBadge(arch) {
     ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     ctx.fillText(`Affinité ${tierLabel(primaryPct)}`, cx, cy + imgH / 2 + 140);
 
+    ctx.fillStyle = '#374151';
+    ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText(ARCH_TAGLINES[primary.name], cx, cy + imgH / 2 + 185);
+
     ctx.fillStyle = ARCH_COLORS[primary.name];
     ctx.font = 'bold 32px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(`#${primary.name}`, cx, cy + imgH / 2 + 195);
+    ctx.fillText(`#${primary.name}`, cx, cy + imgH / 2 + 235);
 
     if (secondary) {
       const secondaryPct = secondary.display_percentage != null ? secondary.display_percentage : secondary.percentage;
       ctx.fillStyle = '#6b7280';
       ctx.font = '24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText(`+ ${secondary.name} (affinité ${tierLabel(secondaryPct)})`, cx, cy + imgH / 2 + 235);
+      ctx.fillText(`+ ${secondary.name} (affinité ${tierLabel(secondaryPct)})`, cx, cy + imgH / 2 + 275);
     }
 
     const todayStr = new Date().toLocaleDateString('fr-FR');
