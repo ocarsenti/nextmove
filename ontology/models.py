@@ -235,6 +235,7 @@ class MatchResult(BaseModel):
 class ArchetypeScore(BaseModel):
     name: str                     # "Builder" | "Expert" | "Operator" | "Leader" | "Explorer"
     percentage: float             # 0-100, the 5 always sum to 100 (or to 0 if fully unscoreable)
+    display_percentage: float     # 0-100, the 5 always sum to 100 — PRESENTATION ONLY, see engine/archetype.py
     confidence: float             # weighted mean confidence of the axes that contributed
     axes_used: list[str]          # which axes actually contributed (post masking/renormalization)
     axes_missing: list[str]       # axes in this archetype's signature that were masked/absent

@@ -19,6 +19,8 @@ Key differences from V4:
 """
 from __future__ import annotations
 
+import math
+
 from ontology.models import (
     ArchetypeDistribution,
     ArchetypeScore,
@@ -28,6 +30,56 @@ from ontology.models import (
 from ontology.registry import AxisRegistry
 
 CONFIDENCE_FLOOR = 0.6
+
+# ---------------------------------------------------------------------
+# PROVISIONAL — display-only differentiation layer
+# ---------------------------------------------------------------------
+# `percentage` (below) is raw_affinity's share of the total across the 5
+# archetypes. Since every raw_affinity is a weighted AVERAGE bounded to
+# [0,1] (weights sum to 1 per archetype — see ARCHETYPE_AXIS_AFFINITY),
+# and several axes feed 3 of the 5 archetypes at once (autonomy, rigor,
+# persistence, cognitive_structuring...), `percentage` mechanically
+# clusters around 100/5=20% for most profiles, even ones with genuinely
+# high axis scores — the shared axes lift several archetypes together
+# instead of isolating one. Verified on synthetic personas 2026-08-02:
+# a profile with autonomy=0.85 and persistence=0.80 still only reached
+# 23.8% on its dominant archetype.
+#
+# display_percentage re-expresses the SAME raw_affinity values, centered
+# on the profile's own mean and passed through a softmax — so it reflects
+# how differentiated a person is RELATIVE TO THEMSELVES rather than
+# against the absolute [0,1] scale. A genuinely flat profile (all 5
+# raw_affinity close together) still comes out flat; a profile with real
+# separation gets a wider, more legible spread. It changes nothing about
+# ARCHETYPE_AXIS_AFFINITY or raw_affinity itself.
+#
+# DISPLAY_TEMPERATURE IS NOT CALIBRATED ON REAL DATA. Synthetic testing
+# (independent-axes vs. halo/acquiescence-style correlated axes, n=300
+# each) showed the SAME temperature produces a median dominant-secondary
+# gap of 24pt under one population assumption and 8pt under the other —
+# a 3x swing from the same formula, purely from an assumption about how
+# real respondents actually answer. This constant must be recalibrated
+# once real beta raw_affinity data exists (recommended: n>=50-100 real
+# respondents), by picking T against the empirical distribution of gaps
+# rather than any synthetic sample. Until then, treat display_percentage
+# as illustrative, not something to build a public-facing badge/claim on.
+#
+# display_percentage is presentation-only: it must never feed into
+# dominant/secondary/summary/low_confidence, matching, or any other
+# decision-facing logic (see TestArchitecturalIsolation in
+# tests/test_archetype.py for the equivalent guarantee on `percentage`).
+DISPLAY_TEMPERATURE = 0.06  # PROVISIONAL — recalibrate on real beta data before any public-facing use
+
+
+def _display_percentages(raw_affinity: dict[str, float], temperature: float = DISPLAY_TEMPERATURE) -> dict[str, float]:
+    """Centered-softmax transform of raw_affinity — presentation only, see module docstring above."""
+    if not raw_affinity or all(v == 0.0 for v in raw_affinity.values()):
+        return {name: 0.0 for name in raw_affinity}
+    values = list(raw_affinity.values())
+    mean = sum(values) / len(values)
+    exp_values = {name: math.exp((v - mean) / temperature) for name, v in raw_affinity.items()}
+    total = sum(exp_values.values())
+    return {name: round(v / total * 100, 1) for name, v in exp_values.items()}
 
 # Each archetype's affinity to the 16 primary axes (meta axes excluded).
 # Weights are non-negative and sum to 1.0 per archetype — same convention
@@ -130,10 +182,15 @@ def compute_archetype_distribution(profile: Profile, registry: AxisRegistry) -> 
     else:
         percentages = {name: 0.0 for name in ARCHETYPE_NAMES}
 
+    # Presentation-only layer — see module-level comment above DISPLAY_TEMPERATURE.
+    # Does not affect percentages, dominant/secondary, summary, or low_confidence below.
+    display_percentages = _display_percentages(raw_affinity)
+
     scores = [
         ArchetypeScore(
             name=name,
             percentage=percentages[name],
+            display_percentage=display_percentages[name],
             confidence=round(confidence[name], 3),
             axes_used=axes_used[name],
             axes_missing=axes_missing[name],
