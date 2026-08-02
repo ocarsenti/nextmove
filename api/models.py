@@ -21,6 +21,7 @@ class ScoreResponse(BaseModel):
     pending_questions: list[str]
     explanation: dict
     archetype: dict                  # ArchetypeDistribution.model_dump()
+    success_conditions: dict         # build_conditions_narrative() output — presentation only
 
 
 class QuestionnaireResponse(BaseModel):

@@ -22,6 +22,7 @@ from engine.v6_rules import V6RuleEngine
 from engine.transformation import TransformationEngine
 from engine.matching import compute_tensions
 from engine.archetype import compute_archetype_distribution
+from engine.success_conditions import build_conditions_narrative
 from engine.constraints import load_constraint_library, analyze_job
 from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
@@ -197,6 +198,7 @@ def _compute_score(user_id: str, answers: dict[str, str], context_hint: Optional
             "summary": _explainer.summary(trace),
         },
         archetype=compute_archetype_distribution(profile, _registry).model_dump(),
+        success_conditions=build_conditions_narrative(profile),
     )
 
 
