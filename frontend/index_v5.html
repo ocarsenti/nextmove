@@ -879,14 +879,15 @@ document.getElementById('retestSaveBtn').addEventListener('click', async () => {
 // =====================================================================
 // LINKEDIN SHARE — badge + photo ring (ported from NEXTMOVE-V4 landing/quiz.html)
 // =====================================================================
-const ARCH_IMAGES = {Builder:'images/builder.png',Expert:'images/expert.png',Operator:'images/operator.png',Leader:'images/leader.png',Explorer:'images/explorer.png'};
-const ARCH_COLORS = {Builder:'#9333ea',Expert:'#3b5bdb',Operator:'#dc3545',Leader:'#16a34a',Explorer:'#2563eb'};
+const ARCH_IMAGES = {Builder:'images/builder.png',Expert:'images/expert.png',Operator:'images/operator.png',Leader:'images/leader.png',Explorer:'images/explorer.png',Polyvalent:'images/polyvalent.png'};
+const ARCH_COLORS = {Builder:'#9333ea',Expert:'#3b5bdb',Operator:'#dc3545',Leader:'#16a34a',Explorer:'#2563eb',Polyvalent:'#0d9488'};
 const ARCH_TAGLINES = {
   Builder:"Je préfère construire, lancer, livrer.",
   Expert:"Je préfère analyser, approfondir, résoudre.",
   Operator:"Je préfère exécuter, optimiser, fiabiliser.",
   Leader:"Je préfère orienter, fédérer, arbitrer.",
-  Explorer:"Je préfère découvrir, tester, pivoter."
+  Explorer:"Je préfère découvrir, tester, pivoter.",
+  Polyvalent:"Plusieurs modes de fonctionnement compatibles."
 };
 
 // Mirrors DISPLAY_TIERS in engine/archetype.py — keep the two in sync if
@@ -906,6 +907,10 @@ function switchTab(tab) {
 }
 
 // --- BADGE CANVAS ---
+// Each animal illustration in ARCH_IMAGES already has its "#Archetype"
+// ribbon baked into the PNG (see frontend/images/ + build_badges.py), so
+// the canvas only needs to draw the image plus the surrounding context
+// (percentage, tagline, disclaimer) — it no longer re-draws the hashtag.
 function generateBadge(arch) {
   if (!arch.dominant || arch.dominant === 'Unscored') return;
   const primary = arch.scores.find(s => s.name === arch.dominant);
@@ -920,37 +925,18 @@ function generateBadge(arch) {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, W, H);
 
-  // A polyvalent/insufficient_signal profile shouldn't get a confident
-  // single-archetype badge — that would contradict the post text, which
-  // correctly says "configuration polyvalente" for the same profile.
-  // Same gate as _display_mode_and_summary in engine/archetype.py.
-  if (arch.display_mode && arch.display_mode !== 'typed') {
-    ctx.fillStyle = '#374151';
-    ctx.font = 'bold 40px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('CONFIGURATION', W / 2, H / 2 - 40);
-    ctx.fillText('POLYVALENTE', W / 2, H / 2 + 20);
-    ctx.fillStyle = '#6b7280';
-    ctx.font = '24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('Plusieurs modes de fonctionnement compatibles', W / 2, H / 2 + 80);
-    ctx.fillStyle = '#2563eb';
-    ctx.font = 'bold 32px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('#Polyvalent', W / 2, H / 2 + 130);
-    const todayStr = new Date().toLocaleDateString('fr-FR');
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '20px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(`Auto-évaluation, non clinique — ${todayStr} — nextmove.ai/methode`, W / 2, H - 90);
-    ctx.fillStyle = '#374151';
-    ctx.font = 'bold 24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('nextmove.ai', W / 2, H - 55);
-    return;
-  }
+  // A polyvalent/insufficient_signal profile still gets its own image
+  // (the chameleon) rather than a confident single-archetype badge —
+  // same gate as _display_mode_and_summary in engine/archetype.py.
+  const isPolyvalentBadge = !!(arch.display_mode && arch.display_mode !== 'typed');
+  const archName = isPolyvalentBadge ? 'Polyvalent' : primary.name;
+  const headline = isPolyvalentBadge ? 'CONFIGURATION POLYVALENTE' : 'CONFIGURATION DOMINANTE';
 
   const img = new Image();
   img.onload = () => {
     const cx = W / 2, cy = 380;
     const grad = ctx.createRadialGradient(cx, cy, 60, cx, cy, 220);
-    grad.addColorStop(0, ARCH_COLORS[primary.name] + '20');
+    grad.addColorStop(0, ARCH_COLORS[archName] + '20');
     grad.addColorStop(1, 'transparent');
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(cx, cy, 220, 0, Math.PI * 2); ctx.fill();
@@ -961,31 +947,33 @@ function generateBadge(arch) {
     ctx.fillStyle = '#9ca3af';
     ctx.font = 'bold 24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('CONFIGURATION DOMINANTE', cx, cy + imgH / 2 + 20);
+    ctx.fillText(headline, cx, cy + imgH / 2 + 20);
 
-    ctx.fillStyle = ARCH_COLORS[primary.name];
-    ctx.font = 'bold 72px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(primary.name.toUpperCase(), cx, cy + imgH / 2 + 100);
+    if (!isPolyvalentBadge) {
+      ctx.fillStyle = ARCH_COLORS[archName];
+      ctx.font = 'bold 60px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(primary.name.toUpperCase(), cx, cy + imgH / 2 + 95);
 
-    const primaryPct = primary.display_percentage != null ? primary.display_percentage : primary.percentage;
-    ctx.fillStyle = '#6b7280';
-    ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(`Affinité ${tierLabel(primaryPct)}`, cx, cy + imgH / 2 + 140);
-
-    ctx.fillStyle = '#374151';
-    ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(ARCH_TAGLINES[primary.name], cx, cy + imgH / 2 + 185);
-
-    ctx.fillStyle = ARCH_COLORS[primary.name];
-    ctx.font = 'bold 32px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText(`#${primary.name}`, cx, cy + imgH / 2 + 235);
-
-    if (secondary) {
-      const secondaryPct = secondary.display_percentage != null ? secondary.display_percentage : secondary.percentage;
+      const primaryPct = primary.display_percentage != null ? primary.display_percentage : primary.percentage;
       ctx.fillStyle = '#6b7280';
-      ctx.font = '24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText(`+ ${secondary.name} (affinité ${tierLabel(secondaryPct)})`, cx, cy + imgH / 2 + 275);
+      ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      ctx.fillText(`Affinité ${tierLabel(primaryPct)}`, cx, cy + imgH / 2 + 135);
+
+      ctx.fillStyle = '#374151';
+      ctx.font = '28px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      ctx.fillText(ARCH_TAGLINES[primary.name], cx, cy + imgH / 2 + 180);
+
+      if (secondary) {
+        const secondaryPct = secondary.display_percentage != null ? secondary.display_percentage : secondary.percentage;
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        ctx.fillText(`+ ${secondary.name} (affinité ${tierLabel(secondaryPct)})`, cx, cy + imgH / 2 + 230);
+      }
+    } else {
+      ctx.fillStyle = '#374151';
+      ctx.font = '26px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      ctx.fillText(ARCH_TAGLINES.Polyvalent, cx, cy + imgH / 2 + 100);
     }
 
     const todayStr = new Date().toLocaleDateString('fr-FR');
@@ -996,7 +984,7 @@ function generateBadge(arch) {
     ctx.font = 'bold 24px "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     ctx.fillText('nextmove.ai', cx, H - 55);
   };
-  img.src = ARCH_IMAGES[primary.name];
+  img.src = ARCH_IMAGES[archName];
 }
 
 // --- RING CANVAS ---
