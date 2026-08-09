@@ -10,12 +10,12 @@ FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 # Colors match ARCH_COLORS already defined in frontend/index_v5.html,
 # Polyvalent gets a new teal to match the chameleon.
 ARCHETYPES = {
-    "Builder":    ("castor.jpeg",   "#9333ea"),
-    "Leader":     ("lion.jpeg",     "#16a34a"),
-    "Operator":   ("abeille.jpeg",  "#dc3545"),
-    "Expert":     ("hibou.jpeg",    "#3b5bdb"),
-    "Polyvalent": ("cameleon.jpeg", "#0d9488"),
-    "Explorer":   ("renard.jpeg",   "#2563eb"),
+    "Builder":    ("castor.png",   "#9333ea"),
+    "Leader":     ("lion.png",     "#16a34a"),
+    "Operator":   ("loutre.png",   "#dc3545"),
+    "Expert":     ("hibou.png",    "#3b5bdb"),
+    "Polyvalent": ("cameleon.png", "#0d9488"),
+    "Explorer":   ("renard.png",   "#2563eb"),
 }
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "badge_sources")
