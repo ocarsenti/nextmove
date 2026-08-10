@@ -747,12 +747,19 @@ function renderArchetype(arch) {
   container.innerHTML = '';
   arch.scores.forEach(s => {
     const isDominant = s.name === arch.dominant;
+    // display_percentage is the presentation-only, differentiated reading
+    // (softmax + floor — see engine/archetype.py); percentage is the raw
+    // share, which mechanically clusters near 100/5=20% for most profiles
+    // and reads as "undifferentiated" even when display_summary above
+    // already says "affinité forte". Fall back to percentage only if
+    // display_percentage is somehow absent (older cached API response).
+    const pct = s.display_percentage != null ? s.display_percentage : s.percentage;
     const lowConfTag = s.confidence < 0.6 && s.percentage > 0
       ? `<span class="arch-lowconf-tag">confiance ${Math.round(s.confidence * 100)}%</span>` : '';
     container.innerHTML += `<div class="arch-row">
       <div class="arch-name">${esc(s.name)}${lowConfTag}</div>
-      <div class="arch-track"><div class="arch-fill${isDominant ? ' dominant' : ''}" style="width:${s.percentage}%"></div></div>
-      <div class="arch-pct">${s.percentage}%</div>
+      <div class="arch-track"><div class="arch-fill${isDominant ? ' dominant' : ''}" style="width:${pct}%"></div></div>
+      <div class="arch-pct">${Math.round(pct)}%</div>
     </div>`;
   });
   window._archDist = arch;
