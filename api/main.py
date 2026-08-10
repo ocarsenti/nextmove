@@ -21,12 +21,13 @@ from engine.signals import SignalComputer
 from engine.v6_rules import V6RuleEngine
 from engine.transformation import TransformationEngine
 from engine.matching import compute_tensions
-from engine.archetype import compute_archetype_distribution
+from engine.archetype import compute_archetype_distribution, compute_archetype_distribution_with_raw
 from engine.success_conditions import build_conditions_narrative
 from engine.constraints import load_constraint_library, analyze_job
 from engine.audit import AuditLog
 from engine.job_extraction import extract_job_axes, extract_signals, signals_to_axes, load_signal_library
 from research import job_extraction_log
+from research import archetype_calibration_log
 from research.job_extraction_validation import calibrate_signal_vocabulary
 from research import job_annotation_store
 from research.job_annotation_agreement import score_agreement
@@ -76,6 +77,7 @@ _job_store: dict[str, JobCard] = {}  # in-memory — mirrors the rest of v5 (no 
 _constraint_library = load_constraint_library()
 _retest_store = RetestStore()
 job_extraction_log.init_db()
+archetype_calibration_log.init_db()
 job_annotation_store.init_db()
 
 
@@ -182,6 +184,24 @@ def _compute_score(user_id: str, answers: dict[str, str], context_hint: Optional
     low_conf = _scorer.low_confidence_axes(profile)
     weighted = _scorer.weighted_profile(profile)
 
+    archetype_distribution, raw_affinity = compute_archetype_distribution_with_raw(profile, _registry)
+
+    # Calibration logging — best-effort, never blocks the actual response.
+    # Only complete profiles: partial in-progress answers would pollute the
+    # distribution we're trying to calibrate against. See
+    # research/archetype_calibration_log.py for what is/isn't stored.
+    if profile.is_complete:
+        try:
+            archetype_calibration_log.log_passage(
+                raw_affinity,
+                archetype_distribution.dominant,
+                archetype_distribution.secondary,
+                archetype_distribution.low_confidence,
+                context_id,
+            )
+        except Exception:
+            pass  # calibration logging is best-effort — never blocks the actual response
+
     return ScoreResponse(
         user_id=profile.user_id,
         context_detected=context_id,
@@ -197,7 +217,7 @@ def _compute_score(user_id: str, answers: dict[str, str], context_hint: Optional
             "adaptive_activations": trace.adaptive_activations,
             "summary": _explainer.summary(trace),
         },
-        archetype=compute_archetype_distribution(profile, _registry).model_dump(),
+        archetype=archetype_distribution.model_dump(),
         success_conditions=build_conditions_narrative(profile),
     )
 
@@ -276,6 +296,28 @@ def job_signal_calibration_report():
     library = load_signal_library()
     logged = job_extraction_log.all_extractions()
     return calibrate_signal_vocabulary(logged, library)
+
+
+@app.get("/study/archetype-calibration/report")
+def archetype_calibration_report():
+    """Progress toward recalibrating DISPLAY_TEMPERATURE/DISPLAY_FLOOR/
+    DISPLAY_MIN_GAP (see engine/archetype.py) on real data instead of the
+    5 synthetic personas currently used. See research/archetype_calibration_log.py
+    for exactly what's logged and why. Not exposed unauthenticated on the
+    public domain, same as the retest/quality reports above.
+
+    recommended_n follows the same n>=50-100 guidance documented in
+    engine/archetype.py's DISPLAY_TEMPERATURE comment — not a hard cutoff,
+    just the point below which picking a new constant from this data would
+    itself be no more principled than the synthetic personas it replaces.
+    """
+    n = archetype_calibration_log.count_passages()
+    recommended_n = 50
+    return {
+        "passages_logged": n,
+        "recommended_n": recommended_n,
+        "ready_for_recalibration": n >= recommended_n,
+    }
 
 
 @app.get("/job-signals", response_model=JobSignalListResponse)

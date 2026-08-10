@@ -68,7 +68,15 @@ CONFIDENCE_FLOOR = 0.6
 # dominant/secondary/summary/low_confidence, matching, or any other
 # decision-facing logic (see TestArchitecturalIsolation in
 # tests/test_archetype.py for the equivalent guarantee on `percentage`).
-DISPLAY_TEMPERATURE = 0.06  # PROVISIONAL — recalibrate on real beta data before any public-facing use
+#
+# 2026-08-05: bumped 0.06 -> 0.10 as an interim, more conservative default
+# while research/archetype_calibration_log.py accumulates real raw_affinity
+# data (see its module docstring). 0.06 was polarizing enough that a
+# modest real gap (e.g. Operator 26.8% vs. Explorer 22.2% raw) rendered as
+# 72% vs. 13% — legible, but risking more certainty than the underlying
+# signal supports. 0.10 is still a guess, not a calibrated value: replace
+# both once n>=50-100 real completed profiles exist in the calibration log.
+DISPLAY_TEMPERATURE = 0.10  # PROVISIONAL — recalibrate on real beta data before any public-facing use
 
 # Softmax alone can push a genuinely-present-but-not-dominant archetype
 # toward ~0-2%, which reads as "this trait is absent" rather than "this
@@ -267,6 +275,18 @@ def _usable_axes(profile: Profile, weights: dict[str, float]) -> dict[str, float
 
 
 def compute_archetype_distribution(profile: Profile, registry: AxisRegistry) -> ArchetypeDistribution:
+    distribution, _raw_affinity = compute_archetype_distribution_with_raw(profile, registry)
+    return distribution
+
+
+def compute_archetype_distribution_with_raw(
+    profile: Profile, registry: AxisRegistry
+) -> tuple[ArchetypeDistribution, dict[str, float]]:
+    """Same computation as compute_archetype_distribution, but also returns
+    the pre-normalization raw_affinity dict — needed by callers that want
+    to log it for calibration (see research/archetype_calibration_log.py),
+    since `percentage`/`display_percentage` are both derived FROM
+    raw_affinity and aren't interchangeable with it for that purpose."""
     raw_affinity: dict[str, float] = {}
     axes_used: dict[str, list[str]] = {}
     axes_missing: dict[str, list[str]] = {}
@@ -332,7 +352,7 @@ def compute_archetype_distribution(profile: Profile, registry: AxisRegistry) -> 
     else:
         display_mode, display_summary = _display_mode_and_summary(scores, low_confidence)
 
-    return ArchetypeDistribution(
+    distribution = ArchetypeDistribution(
         user_id=profile.user_id,
         scores=scores,
         dominant=dominant,
@@ -342,3 +362,4 @@ def compute_archetype_distribution(profile: Profile, registry: AxisRegistry) -> 
         display_mode=display_mode,
         display_summary=display_summary,
     )
+    return distribution, raw_affinity

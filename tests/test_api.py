@@ -255,3 +255,45 @@ class TestJobExtractEndpoint:
         assert r.status_code == 200
         body = r.json()
         assert any(s["signal_id"] == first_signal.id for s in body["signals"])
+
+
+# ===================================================================
+# ARCHETYPE CALIBRATION LOGGING — /score should log raw_affinity for
+# complete profiles only (see research/archetype_calibration_log.py)
+# ===================================================================
+
+@pytest.mark.api
+class TestArchetypeCalibrationLogging:
+    def test_complete_profile_is_logged(self, monkeypatch, tmp_path):
+        from research import archetype_calibration_log as cal_log
+
+        db_path = tmp_path / "calib_complete.db"
+        cal_log.init_db(db_path)
+        monkeypatch.setattr(cal_log, "DB_PATH", db_path)
+
+        before = cal_log.count_passages(db_path)
+        r = client.post("/score", json={"user_id": "u_calib_1", "answers": _full_answers()})
+        assert r.status_code == 200
+        assert r.json()["is_complete"] is True
+        after = cal_log.count_passages(db_path)
+        assert after == before + 1
+
+        row = cal_log.all_passages(db_path)[-1]
+        assert set(row["raw_affinity"].keys()) == {"Builder", "Expert", "Operator", "Leader", "Explorer"}
+        # no PII / no linkage back to this session's user_id
+        assert "user_id" not in row and "session_user_id" not in row
+
+    def test_partial_profile_is_not_logged(self, monkeypatch, tmp_path):
+        from research import archetype_calibration_log as cal_log
+
+        db_path = tmp_path / "calib_partial.db"
+        cal_log.init_db(db_path)
+        monkeypatch.setattr(cal_log, "DB_PATH", db_path)
+
+        base = _questionnaire.initial_sequence()
+        partial = {qid: "B" for qid in base[:2]}
+        before = cal_log.count_passages(db_path)
+        r = client.post("/score", json={"user_id": "u_calib_2", "answers": partial})
+        assert r.status_code == 200
+        assert r.json()["is_complete"] is False
+        assert cal_log.count_passages(db_path) == before

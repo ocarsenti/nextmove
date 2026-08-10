@@ -6,6 +6,7 @@ data/profiles/
 data/retest/
 data/job_extraction_log.db
 data/job_annotations.db
+data/archetype_calibration_log.db
 venv/
 *.log
 htmlcov/
