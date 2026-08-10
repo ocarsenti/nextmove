@@ -73,6 +73,26 @@ Le script :
 Variables d'environnement optionnelles pour surcharger les valeurs par défaut :
 `NEXTMOVE_STAGING_DIR`, `NEXTMOVE_STAGING_BRANCH`, `NEXTMOVE_STAGING_SERVICE`.
 
+## Alerte de calibration des archétypes
+
+`scripts/check_calibration_and_alert.py` envoie un email (une seule fois,
+via un flag) dès que `research/archetype_calibration_log.py` a accumulé
+assez de profils complets pour recalibrer `DISPLAY_TEMPERATURE`/
+`DISPLAY_FLOOR`/`DISPLAY_MIN_GAP` (`engine/archetype.py`) sur des données
+réelles. Remplir dans le `.env` de prod (voir `.env.example`) :
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`,
+`ARCHETYPE_CALIBRATION_ALERT_TO`.
+
+Crontab (une fois par jour suffit) :
+```bash
+0 8 * * * cd /opt/nextmove && /opt/nextmove/.venv/bin/python3 scripts/check_calibration_and_alert.py >> data/calibration_alert.log 2>&1
+```
+
+Après avoir effectivement recalibré les constantes sur les données
+reçues, supprimer `data/archetype_calibration_alert_sent.flag` (ou
+relancer le script avec `--reset`) pour qu'une future alerte reste
+possible au prochain seuil.
+
 ## Logs
 
 ```bash

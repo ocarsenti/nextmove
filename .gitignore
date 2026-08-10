@@ -7,6 +7,7 @@ data/retest/
 data/job_extraction_log.db
 data/job_annotations.db
 data/archetype_calibration_log.db
+data/archetype_calibration_alert_sent.flag
 venv/
 *.log
 htmlcov/

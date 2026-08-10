@@ -40,6 +40,14 @@ from typing import Optional
 
 DB_PATH = Path(__file__).parent.parent / "data" / "archetype_calibration_log.db"
 
+# Same guidance as DISPLAY_TEMPERATURE's comment in engine/archetype.py:
+# not a hard cutoff, just the point below which picking a new constant
+# from this data would be no more principled than the synthetic personas
+# it replaces. Shared by /study/archetype-calibration/report and
+# scripts/check_calibration_and_alert.py — keep both reading this, not a
+# copy of the number, so they can't drift apart.
+RECOMMENDED_N = 50
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS raw_affinity_passages (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,

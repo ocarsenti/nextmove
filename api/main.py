@@ -312,7 +312,7 @@ def archetype_calibration_report():
     itself be no more principled than the synthetic personas it replaces.
     """
     n = archetype_calibration_log.count_passages()
-    recommended_n = 50
+    recommended_n = archetype_calibration_log.RECOMMENDED_N
     return {
         "passages_logged": n,
         "recommended_n": recommended_n,
