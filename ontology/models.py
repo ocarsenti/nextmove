@@ -233,7 +233,7 @@ class MatchResult(BaseModel):
 # job context, which V4's fixed 6-axis table could never do.
 
 class ArchetypeScore(BaseModel):
-    name: str                     # "Builder" | "Expert" | "Operator" | "Leader" | "Explorer"
+    name: str                     # "Builder" | "Expert" | "Operator" | "Leader" | "Connecteur"
     percentage: float             # 0-100, the 5 always sum to 100 (or to 0 if fully unscoreable)
     display_percentage: float     # 0-100, the 5 always sum to 100 — PRESENTATION ONLY, see engine/archetype.py
     confidence: float             # weighted mean confidence of the axes that contributed

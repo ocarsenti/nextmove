@@ -279,7 +279,7 @@ class TestArchetypeCalibrationLogging:
         assert after == before + 1
 
         row = cal_log.all_passages(db_path)[-1]
-        assert set(row["raw_affinity"].keys()) == {"Builder", "Expert", "Operator", "Leader", "Explorer"}
+        assert set(row["raw_affinity"].keys()) == {"Builder", "Expert", "Operator", "Leader", "Connecteur"}
         # no PII / no linkage back to this session's user_id
         assert "user_id" not in row and "session_user_id" not in row
 

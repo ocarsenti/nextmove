@@ -1,4 +1,4 @@
-"""Tests for engine/archetype.py — Builder/Expert/Operator/Leader/Explorer on 18 axes."""
+"""Tests for engine/archetype.py — Builder/Expert/Operator/Leader/Connecteur on 18 axes."""
 
 import sys
 import unittest
@@ -21,7 +21,7 @@ def _build_full_answers(bank: QuestionBank, registry: AxisRegistry, score_value:
 class TestAffinityTable(unittest.TestCase):
 
     def test_five_archetypes(self):
-        self.assertEqual(set(ARCHETYPE_AXIS_AFFINITY.keys()), {"Builder", "Expert", "Operator", "Leader", "Explorer"})
+        self.assertEqual(set(ARCHETYPE_AXIS_AFFINITY.keys()), {"Builder", "Expert", "Operator", "Leader", "Connecteur"})
 
     def test_weights_sum_to_one(self):
         for name, weights in ARCHETYPE_AXIS_AFFINITY.items():
@@ -106,16 +106,16 @@ class TestComputeArchetypeDistribution(unittest.TestCase):
 
     def test_all_signature_axes_masked_gives_zero_not_crash(self):
         answers = _build_full_answers(self.bank, self.registry, score_value="B")
-        for axis_id in ARCHETYPE_AXIS_AFFINITY["Explorer"]:
+        for axis_id in ARCHETYPE_AXIS_AFFINITY["Connecteur"]:
             self.registry.mask(axis_id, reason="test")
         try:
-            profile = self.scorer.score("candidate_explorer_masked", answers)
+            profile = self.scorer.score("candidate_connecteur_masked", answers)
             dist = compute_archetype_distribution(profile, self.registry)
-            explorer = next(s for s in dist.scores if s.name == "Explorer")
-            self.assertEqual(explorer.percentage, 0.0)
-            self.assertEqual(explorer.axes_used, [])
+            connecteur = next(s for s in dist.scores if s.name == "Connecteur")
+            self.assertEqual(connecteur.percentage, 0.0)
+            self.assertEqual(connecteur.axes_used, [])
         finally:
-            for axis_id in ARCHETYPE_AXIS_AFFINITY["Explorer"]:
+            for axis_id in ARCHETYPE_AXIS_AFFINITY["Connecteur"]:
                 self.registry.unmask(axis_id)
 
     def test_low_confidence_flagged_on_thin_answers(self):

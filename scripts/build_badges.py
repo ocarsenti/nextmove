@@ -15,7 +15,7 @@ ARCHETYPES = {
     "Operator":   ("loutre.png",   "#dc3545"),
     "Expert":     ("hibou.png",    "#3b5bdb"),
     "Polyvalent": ("cameleon.png", "#0d9488"),
-    "Explorer":   ("renard.png",   "#2563eb"),
+    "Connecteur": ("renard.png",   "#2563eb"),
 }
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "badge_sources")

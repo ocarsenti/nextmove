@@ -115,6 +115,22 @@
       "id": "changement_frequent_priorites",
       "label": "Changement fréquent de priorités ou de sujets traités",
       "axis_effects": {"cognitive_flexibility": {"level": 0.75, "importance": 0.6}}
+    },
+    {
+      "id": "reseau_relationnel_cle",
+      "label": "Le rôle repose sur un réseau relationnel externe (partenariats, clients, écosystème)",
+      "axis_effects": {
+        "social_interaction": {"level": 0.85, "importance": 0.8},
+        "influence": {"level": 0.6, "importance": 0.5}
+      }
+    },
+    {
+      "id": "interface_entre_equipes",
+      "label": "Sert d'interface ou de pont entre équipes, fonctions ou organisations différentes",
+      "axis_effects": {
+        "social_interaction": {"level": 0.7, "importance": 0.6},
+        "cognitive_flexibility": {"level": 0.6, "importance": 0.5}
+      }
     }
   ]
 }

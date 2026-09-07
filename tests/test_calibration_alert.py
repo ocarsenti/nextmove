@@ -18,7 +18,7 @@ import check_calibration_and_alert as alert_script
 def _log_n_passages(n, db_path):
     for _ in range(n):
         cal_log.log_passage(
-            {"Builder": 0.2, "Expert": 0.2, "Operator": 0.2, "Leader": 0.2, "Explorer": 0.2},
+            {"Builder": 0.2, "Expert": 0.2, "Operator": 0.2, "Leader": 0.2, "Connecteur": 0.2},
             "Builder", None, False, None, db_path=db_path,
         )
 

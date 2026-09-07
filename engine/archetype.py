@@ -1,4 +1,4 @@
-"""Archetype distribution — Builder/Expert/Operator/Leader/Explorer, ported from
+"""Archetype distribution — Builder/Expert/Operator/Leader/Connecteur, ported from
 V4 (backend/questionnaire.py::ARCHETYPE_AXIS_AFFINITY) and refined for v5's
 18-axis ontology.
 
@@ -72,7 +72,7 @@ CONFIDENCE_FLOOR = 0.6
 # 2026-08-05: bumped 0.06 -> 0.10 as an interim, more conservative default
 # while research/archetype_calibration_log.py accumulates real raw_affinity
 # data (see its module docstring). 0.06 was polarizing enough that a
-# modest real gap (e.g. Operator 26.8% vs. Explorer 22.2% raw) rendered as
+# modest real gap (e.g. Operator 26.8% vs. Connecteur 22.2% raw) rendered as
 # 72% vs. 13% — legible, but risking more certainty than the underlying
 # signal supports. 0.10 is still a guess, not a calibrated value: replace
 # both once n>=50-100 real completed profiles exist in the calibration log.
@@ -101,7 +101,7 @@ DISPLAY_FLOOR = 5.0  # PROVISIONAL — % minimum per archetype after softmax, be
 # Verified 2026-08-02: 4 "typed" personas showed a dominant-secondary
 # display_percentage gap of 33-69pt; one deliberately balanced persona
 # (full confidence=0.85, low_confidence=False) showed only 3pt.
-# Presenting that person as "Explorer" because it happens to edge out
+# Presenting that person as "Connecteur" because it happens to edge out
 # "Builder" by 3pt would misrepresent a real, positive trait (versatility)
 # as a false certainty — and risks a different archetype coming out on a
 # retest, undermining trust in the tool.
@@ -161,8 +161,8 @@ def _display_mode_and_summary(scores: list[ArchetypeScore], low_confidence: bool
             "sans mode de fonctionnement nettement dominant.",
         )
 
-    # Remark 1 (2026-08-02 review): "Mon profil professionnel : Explorer" reads
-    # as a personality label ("I am an Explorer"). "Configuration dominante"
+    # Remark 1 (2026-08-02 review): "Mon profil professionnel : Connecteur" reads
+    # as a personality label ("I am a Connecteur"). "Configuration dominante"
     # keeps the sentence about what the model's reading says, not an identity
     # claim — same shift in framing throughout constraints.py/archetype.py.
     return (
@@ -248,13 +248,30 @@ ARCHETYPE_AXIS_AFFINITY: dict[str, dict[str, float]] = {
         "social_interaction": 0.15,
         "decision_speed": 0.10,
     },
-    "Explorer": {
-        "exploration": 0.25,
+    # Renamed from "Explorer" 2026-09-07: the old signature (exploration/
+    # ambiguity_tolerance/cognitive_flexibility/risk_appetite/autonomy/
+    # decision_speed) lost on 10/10 real job descriptions tested 2026-07-20
+    # (research finding, see git history on this dict) — its axes were the
+    # sparsest in the signal vocabulary (1 signal each) AND it shared 3 of
+    # its 6 axes with Builder, so it rarely won even when signals fired.
+    # "Connecteur" redefines this slot around a genuinely distinct trait —
+    # building/maintaining relationships across people, teams or
+    # organizations — rather than trying to patch the old exploration/risk
+    # framing. social_interaction/cognitive_flexibility/influence/
+    # ambiguity_tolerance were chosen because each now has >=2 signals in
+    # signals_seed.json (social_interaction was raised from 1 to 3 in the
+    # same change, see coordination_multi_equipes/reseau_relationnel_cle/
+    # interface_entre_equipes). Still overlaps Leader on influence and
+    # Operator/Leader on social_interaction — full separation isn't
+    # achievable with only 16 primary axes across 5 archetypes — but this
+    # is a first cut, not empirically validated yet: same caveat as
+    # DISPLAY_TEMPERATURE/DISPLAY_MIN_GAP above, must be checked against
+    # real job descriptions the way the old Explorer signature was.
+    "Connecteur": {
+        "social_interaction": 0.35,
+        "cognitive_flexibility": 0.25,
+        "influence": 0.20,
         "ambiguity_tolerance": 0.20,
-        "cognitive_flexibility": 0.20,
-        "risk_appetite": 0.15,
-        "autonomy": 0.10,
-        "decision_speed": 0.10,
     },
 }
 
